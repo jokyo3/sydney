@@ -51,7 +51,7 @@ async function handleRequest(request, env) {
   const cookie = serverRequest.headers.get('Cookie') || '';
   let cookies = cookie; 
   if (!cookie.includes('_U=')) {
-      cookies += '; _U=1NssJY8JoQgpNNg8fXA66mbbkV5Ev0YAin-YBPurJ69Zsa0gQ-Bq6eINo9NBQ7tam-OM4pykcZqsteI91B6BNM2AgD1XLp8Xy_yL34R2xDEGsb1V-lpIysooyQOlfECAtk_VJRtKUUWLXOI2TLVpfsrqcQhPGF56o56yge4LI11oy7q3K2v2zRSe6c6kpwP6bwtGVJF6cNtmxgzaf0UTEuw; WLS=C=4f32388253816ce8&N=cf03';
+      cookies += '; _U=1NssJY8JoQgpNNg8';
   }
 
   serverRequest.headers.set('Cookie', cookies);
