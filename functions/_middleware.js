@@ -1,5 +1,100 @@
 // pages/functions/_middleware.js
 
+import { brotli_decode } from "./bjs.js"
+const WEB_CONFIG = {
+  WORKER_URL: '', // 如无特殊需求请，保持为''
+};
+
+async function fetchAndExtractVariableString(url = 'https://www.bing.com/chat?q=Microsoft+Copilot&FORM=hpcodx') {
+  try {
+    // 使用fetch API获取网页内容
+    const response = await fetch(url);
+    const htmlContent = await response.text();
+    // 正则表达式匹配特定的data-ajaxResKey和变化的src属性
+    // 注意：由于 HTML 可能包含换行符，我们使用 [\s\S]*? 来匹配任意字符，包括换行符
+    const regex = /data-ajaxResKey="rms:answers:CodexBundle:cib-bundle"[\s\S]*?src="https:\/\/r\.bing\.com\/rp\/(.*?\.br\.js)"/;
+    const match = htmlContent.match(regex);
+    // 如果匹配成功，返回变化的字符串
+    if (match) {
+      return match[1];
+    } else {
+      console.log('No matching string found. Returning default string.');
+      return "-Kc8IFliASxPpbk8y8d9exvjtdg"; // 返回的默认字符串不带引号
+    }
+  } catch (error) {
+    console.error('Fetching failed:', error);
+    return "-Kc8IFliASxPpbk8y8d9exvjtdg"; // 返回的默认字符串不带引号
+  }
+}
+
+// 调用函数，如果不传入任何参数，它将使用默认的网页地址
+// fetchAndExtractVariableString().then(matchedString => console.log(matchedString));
+
+
+async function replaceInResponseBody(resBody, originalString, replacementString, headers) {
+  // 首先，将 ReadableStream 转换为 ArrayBuffer
+  const buffer = await new Response(resBody).arrayBuffer();
+  // 然后，将 ArrayBuffer 转换为字符串
+  const bodyString = new TextDecoder("utf-8").decode(buffer);
+  // 执行替换操作
+  const replacedString = bodyString.replace(new RegExp(originalString, 'g'), replacementString);
+  // 将替换后的字符串转换回 ReadableStream
+  const stream = new ReadableStream({
+    start(controller) {
+      controller.enqueue(new TextEncoder().encode(replacedString));
+      controller.close();
+    }
+  });
+  // 创建一个新的 Response 对象并返回
+  return new Response(stream, { headers });
+}
+
+
+
+const rewritetxtBody = async (res) => {
+    const content_type = res.headers.get("Content-Type") || "";
+    const content_encoding = res.headers.get("Content-Encoding") || "";
+    let encoding = null;
+    let body = res.body;
+    if (content_type.startsWith("text/html")) {
+     // body = res.body;
+        let bodyres = await replaceInResponseBody(body, "r.bing.com", WEB_CONFIG.WORKER_URL,res.headers); 
+         bodyres = await replaceInResponseBody(bodyres.body, "sydney.bing.com", WEB_CONFIG.WORKER_URL,res.headers); 
+        body = bodyres.body;
+    } 
+  return {body, encoding};
+}
+
+
+
+const rewritejsBody = async (res) => {
+    const content_type = res.headers.get("Content-Type") || "";
+    const content_encoding = res.headers.get("Content-Encoding") || "";
+    let encoding = null;
+    let body = res.body;
+    if (content_type.startsWith("text/html")) {
+      body = res.body;
+    } else if (res.url.endsWith("js")) {
+      if (res.url.includes('/rp/')) {
+        let decodedContent = null;
+        if (content_encoding == 'br') {
+          decodedContent = new TextDecoder("utf-8").decode(brotli_decode(new Int8Array(await res.clone().arrayBuffer())));
+          encoding = 'gzip';
+        } else {
+          decodedContent = new TextDecoder("utf-8").decode(new Int8Array(await res.clone().arrayBuffer()));
+        }
+        if (decodedContent) {
+          // @ts-ignore
+          body = decodedContent.replaceAll("www.bing.com", WEB_CONFIG.WORKER_URL.replace("http://", "").replace("https://", ""));
+            const bodyres = await replaceInResponseBody(body, "sydney.bing.com", WEB_CONFIG.WORKER_URL,res.headers); 
+          body = bodyres.body;
+        }
+      }
+    }
+  return {body, encoding};
+}
+
+
 export async function onRequest(context) {
   const { request, env } = context;
 
@@ -31,6 +126,7 @@ function handleOptions(request) {
 
 async function handleWebSocket(request) {
   // 在这里添加您的 WebSocket 处理逻辑
+ 
   let serverUrl = "https://sydney.bing.com";
   const currentUrl = new URL(request.url);
   const fetchUrl = new URL(serverUrl + currentUrl.pathname + currentUrl.search);
@@ -61,10 +157,74 @@ async function handleWebSocket(request) {
   return newRes;
 }
 
-
 async function handleRequest(request, env) {
-  // 在这里添加您的 HTTP 请求处理逻辑
-  const uri = new URL(request.url)
-   uri.hostname = 'sydney.bing.com'
-  return fetch(new Request(uri.toString(), request))
+  let uri = new URL(request.url);
+     if (WEB_CONFIG.WORKER_URL == '') {
+      WEB_CONFIG.WORKER_URL = uri.hostname;
+    }
+
+if (uri.pathname.includes('/turing/')){
+     uri.hostname = 'bing.cf03-b29.workers.dev';
+     return fetch(new Request(uri.toString(), request));
+}
+// 如果请求的是 /chat 路径，则创建一个 blob 来加载 JavaScript 文件
+// if (uri.pathname === '/chat') {
+ 
+    // 获取原始 /chat 路径的内容
+   uri.hostname = 'sokwith-proxybing.hf.space';
+    const chatResponse = await fetch(new Request(uri.toString(), request));
+
+  let newRes ;
+
+  const cibname = await fetchAndExtractVariableString();
+  console.log('CIB Name:', cibname);
+  
+//  let cibname;
+//  fetchAndExtractVariableString()
+//  .then(result => {
+//    cibname = result; // 将结果赋值给cibname变量
+//    console.log('CIB Name:', cibname); // 打印结果
+//  })
+//  .catch(error => {
+//    console.error('Error:', error);
+//  });
+
+  
+ 
+   if (uri.pathname.includes('/rp/-Kc8IFliASxPpbk8y8d9exvjtdg.br.js') && !uri.pathname.includes('/rp/lmu8EBCaPRMKtay8LSArGyY3mv4.br.js')) {
+     const ovURL = 'https://r.bing.com/rp/-Kc8IFliASxPpbk8y8d9exvjtdg.br.js';
+   const   jsResponse = await fetch(ovURL);
+     const jsresult = await rewritejsBody(jsResponse);
+    newRes = new Response(jsresult.body, {
+      status: jsResponse.status,
+      statusText: jsResponse.statusText,
+      headers: jsResponse.headers
+    });
+    newRes.headers.set('content-type', 'application/javascript');
+      return newRes;
+    } else {
+   const { body: modifiedBody, encoding } = await rewritetxtBody(chatResponse);
+// 创建一个新的 Response 对象，包含原始响应的其他属性
+    newRes = new Response(modifiedBody, {
+      status: chatResponse.status,
+      statusText: chatResponse.statusText,
+      headers: chatResponse.headers,
+    });
+   }
+// 设置其他需要的属性
+newRes.headers.set('Access-Control-Allow-Methods', 'GET,HEAD,POST,OPTIONS');
+newRes.headers.set('Access-Control-Allow-Credentials', 'true');
+newRes.headers.set('Access-Control-Allow-Headers', '*');
+
+// 添加其他自定义属性
+//newRes.headers.set('Custom-Header', 'Custom Value');
+
+// 返回新的 Response 对象
+return newRes;
+
+//  } else {
+    // 如果不是，执行原有的加载逻辑
+//    uri.hostname = 'sokwith-proxybing.hf.space';
+//    return fetch(new Request(uri.toString(), request));
+//  }
 }
