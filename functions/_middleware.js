@@ -173,7 +173,7 @@ if (uri.pathname.includes('/turing/')){
   let newRes ;
 
   if (uri.pathname.includes(ciburl)   && !uri.pathname.includes('rp/wAMGEgzu6dXMQl4NYW_4fU74uOk.br.js')){
-    const ovURL = 'https://r.bing.com/rp/-Kc8IFliASxPpbk8y8d9exvjtdg.br.js';
+    const ovURL = 'https://r.bing.com' + ciburl;
      const jsResponse = await fetch(ovURL);
      const jsresult = await rewritejsBody(jsResponse);
      newRes = new Response(jsresult.body, {
