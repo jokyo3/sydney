@@ -48,24 +48,19 @@ async function replaceInResponseBody(resBody, originalString, replacementString,
   // 创建一个新的 Response 对象并返回
   return new Response(stream, { headers });
 }
-
-
-
 const rewritetxtBody = async (res) => {
     const content_type = res.headers.get("Content-Type") || "";
     const content_encoding = res.headers.get("Content-Encoding") || "";
-    let encoding = null;
+    let encoding = content_encoding;
     let body = res.body;
     if (content_type.startsWith("text/html")) {
-     // body = res.body;
-        let bodyres = await replaceInResponseBody(body, "r.bing.com", WEB_CONFIG.WORKER_URL,res.headers); 
-         bodyres = await replaceInResponseBody(bodyres.body, "sydney.bing.com", WEB_CONFIG.WORKER_URL,res.headers); 
-        body = bodyres.body;
+        let bodyres = await replaceInResponseBody(body, "sydney.bing.com", WEB_CONFIG.WORKER_URL,res.headers); 
+       bodyres = await replaceInResponseBody(bodyres.body, "CodexBundle:cib-bundle\" src=\"https://r.bing.com", "CodexBundle:cib-bundle\" src=\"https://" + WEB_CONFIG.WORKER_URL, res.headers);
+       bodyres = await replaceInResponseBody(bodyres.body, "th.bing.com", WEB_CONFIG.WORKER_URL,res.headers); 
+      body = bodyres.body;
     } 
   return {body, encoding};
 }
-
-
 
 const rewritejsBody = async (res) => {
     const content_type = res.headers.get("Content-Type") || "";
@@ -128,6 +123,7 @@ async function handleWebSocket(request) {
   // 在这里添加您的 WebSocket 处理逻辑
  
   let serverUrl = "https://sydney.bing.com";
+  
   const currentUrl = new URL(request.url);
   const fetchUrl = new URL(serverUrl + currentUrl.pathname + currentUrl.search);
   let serverRequest = new Request(fetchUrl, request);
@@ -163,46 +159,31 @@ async function handleRequest(request, env) {
       WEB_CONFIG.WORKER_URL = uri.hostname;
     }
 
-if (uri.pathname.includes('/turing/')){
-     uri.hostname = 'bing.cf03-b29.workers.dev';
+  const cibname = await fetchAndExtractVariableString();
+    const ciburl = '/rp/' + cibname + '.br.js';
+
+
+if (uri.pathname.includes('/turing/')){  
+     uri.hostname = 'free.nbing.eu.org';
      return fetch(new Request(uri.toString(), request));
 }
-// 如果请求的是 /chat 路径，则创建一个 blob 来加载 JavaScript 文件
-// if (uri.pathname === '/chat') {
- 
-    // 获取原始 /chat 路径的内容
+    // 获取原始路径的内容
    uri.hostname = 'sokwith-proxybing.hf.space';
     const chatResponse = await fetch(new Request(uri.toString(), request));
-
   let newRes ;
 
-  const cibname = await fetchAndExtractVariableString();
-  console.log('CIB Name:', cibname);
-  
-//  let cibname;
-//  fetchAndExtractVariableString()
-//  .then(result => {
-//    cibname = result; // 将结果赋值给cibname变量
-//    console.log('CIB Name:', cibname); // 打印结果
-//  })
-//  .catch(error => {
-//    console.error('Error:', error);
-//  });
-
-  
- 
-   if (uri.pathname.includes('/rp/-Kc8IFliASxPpbk8y8d9exvjtdg.br.js') && !uri.pathname.includes('/rp/lmu8EBCaPRMKtay8LSArGyY3mv4.br.js')) {
-     const ovURL = 'https://r.bing.com/rp/-Kc8IFliASxPpbk8y8d9exvjtdg.br.js';
-   const   jsResponse = await fetch(ovURL);
+  if (uri.pathname.includes(ciburl)   && !uri.pathname.includes('rp/wAMGEgzu6dXMQl4NYW_4fU74uOk.br.js')){
+    const ovURL = 'https://r.bing.com/rp/-Kc8IFliASxPpbk8y8d9exvjtdg.br.js';
+     const jsResponse = await fetch(ovURL);
      const jsresult = await rewritejsBody(jsResponse);
-    newRes = new Response(jsresult.body, {
-      status: jsResponse.status,
+     newRes = new Response(jsresult.body, {
+     status: jsResponse.status,
       statusText: jsResponse.statusText,
-      headers: jsResponse.headers
+     headers: jsResponse.headers
     });
     newRes.headers.set('content-type', 'application/javascript');
-      return newRes;
-    } else {
+          return newRes;
+   } 
    const { body: modifiedBody, encoding } = await rewritetxtBody(chatResponse);
 // 创建一个新的 Response 对象，包含原始响应的其他属性
     newRes = new Response(modifiedBody, {
@@ -210,21 +191,12 @@ if (uri.pathname.includes('/turing/')){
       statusText: chatResponse.statusText,
       headers: chatResponse.headers,
     });
-   }
+
 // 设置其他需要的属性
 newRes.headers.set('Access-Control-Allow-Methods', 'GET,HEAD,POST,OPTIONS');
 newRes.headers.set('Access-Control-Allow-Credentials', 'true');
 newRes.headers.set('Access-Control-Allow-Headers', '*');
-
-// 添加其他自定义属性
-//newRes.headers.set('Custom-Header', 'Custom Value');
-
+  newRes.headers.set('CIBurl', ciburl);
 // 返回新的 Response 对象
 return newRes;
-
-//  } else {
-    // 如果不是，执行原有的加载逻辑
-//    uri.hostname = 'sokwith-proxybing.hf.space';
-//    return fetch(new Request(uri.toString(), request));
-//  }
 }
