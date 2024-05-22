@@ -163,7 +163,7 @@ async function handleRequest(request, env) {
     const ciburl = '/rp/' + cibname + '.br.js';
 
 
-if (uri.pathname.includes('/turing/')){  
+if (uri.pathname.includes('/turing/conversation/')){  
      uri.hostname = 'free.nbing.eu.org';
      return fetch(new Request(uri.toString(), request));
 }
