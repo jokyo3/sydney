@@ -19,11 +19,11 @@ async function fetchAndExtractVariableString(url = 'https://www.bing.com/chat?q=
       return match[1];
     } else {
       console.log('No matching string found. Returning default string.');
-      return "SuVKbyqD35yQGxlqbCnDQ2s6Pws"; // 返回的默认字符串不带引号
+      return "5qll3rKQYq__3Rd40S1JxRvZKRA"; // 返回的默认字符串不带引号
     }
   } catch (error) {
     console.error('Fetching failed:', error);
-    return "SuVKbyqD35yQGxlqbCnDQ2s6Pws"; // 返回的默认字符串不带引号
+    return "5qll3rKQYq__3Rd40S1JxRvZKRA"; // 返回的默认字符串不带引号
   }
 }
 
