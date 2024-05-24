@@ -142,7 +142,7 @@ async function handleWebSocket(request) {
   newRes.headers.set('Access-Control-Allow-Methods', 'GET,HEAD,POST,OPTIONS');
   newRes.headers.set('Access-Control-Allow-Credentials', 'true');
   newRes.headers.set('Access-Control-Allow-Headers', '*');
-  newRes.headers.set('Access-Control-Allow-Origin': '*'); //允许所有域的访问
+  newRes.headers.set('Access-Control-Allow-Origin', '*'); //允许所有域的访问
 
   // 调试输出连接 IP
   let Ipurl = new URL("http://ipecho.net/plain");
@@ -198,7 +198,7 @@ if (uri.pathname.includes('/turing/conversation/')){
 newRes.headers.set('Access-Control-Allow-Methods', 'GET,HEAD,POST,OPTIONS');
 newRes.headers.set('Access-Control-Allow-Credentials', 'true');
 newRes.headers.set('Access-Control-Allow-Headers', '*');
-newRes.headers.set('Access-Control-Allow-Origin': '*'); //允许所有域的访问
+newRes.headers.set('Access-Control-Allow-Origin', '*'); //允许所有域的访问
   newRes.headers.set('CIBurl', ciburl);
 // 返回新的 Response 对象
 return newRes;
