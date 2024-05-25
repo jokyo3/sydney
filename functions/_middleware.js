@@ -1,3 +1,4 @@
+
 // pages/functions/_middleware.js
 
 import { brotli_decode } from "./bjs.js"
@@ -5,30 +6,28 @@ const WEB_CONFIG = {
   WORKER_URL: '', // 如无特殊需求请，保持为''
 };
 
-async function fetchAndExtractVariableString(url = 'https://www.bing.com/chat?q=Microsoft+Copilot&FORM=hpcodx') {
+function sleep(seconds) {
+  return new Promise(resolve => setTimeout(resolve, seconds * 1000));
+}
+
+async function fetchAndExtractVariableString(url = 'https://nagse-bingcib.hf.space') {
   try {
     // 使用fetch API获取网页内容
     const response = await fetch(url);
     const htmlContent = await response.text();
-    // 正则表达式匹配特定的data-ajaxResKey和变化的src属性
-    // 注意：由于 HTML 可能包含换行符，我们使用 [\s\S]*? 来匹配任意字符，包括换行符
-    const regex = /data-ajaxResKey="rms:answers:CodexBundle:cib-bundle"[\s\S]*?src="https:\/\/r\.bing\.com\/rp\/(.*?\.br\.js)"/;
-    const match = htmlContent.match(regex);
-    // 如果匹配成功，返回变化的字符串
-    if (match) {
-      return match[1];
+
+    // 检查响应内容中是否包含 '.br.js'
+    if (htmlContent.includes('.br.js')) {
+      return htmlContent; // 如果包含，返回整个响应内容
     } else {
-      console.log('No matching string found. Returning default string.');
-      return "5qll3rKQYq__3Rd40S1JxRvZKRA"; // 返回的默认字符串不带引号SuVKbyqD35yQGxlqbCnDQ2s6Pws.br.js//5qll3rKQYq__3Rd40S1JxRvZKRA
+      // 如果不包含，返回指定的字符串
+      return "-Kc8IFliASxPpbk8y8d9exvjtdg"; // 返回的默认字符串不带引号
     }
   } catch (error) {
-    console.error('Fetching failed:', error);
-    return "5qll3rKQYq__3Rd40S1JxRvZKRA"; // 返回的默认字符串不带引号
+    // 如果请求失败，返回指定的字符串
+    return "-Kc8IFliASxPpbk8y8d9exvjtdg"; // 返回的默认字符串不带引号
   }
 }
-
-// 调用函数，如果不传入任何参数，它将使用默认的网页地址
-// fetchAndExtractVariableString().then(matchedString => console.log(matchedString));
 
 
 async function replaceInResponseBody(resBody, originalString, replacementString, headers) {
@@ -48,20 +47,24 @@ async function replaceInResponseBody(resBody, originalString, replacementString,
   // 创建一个新的 Response 对象并返回
   return new Response(stream, { headers });
 }
+
+
+
 const rewritetxtBody = async (res) => {
     const content_type = res.headers.get("Content-Type") || "";
     const content_encoding = res.headers.get("Content-Encoding") || "";
     let encoding = content_encoding;
     let body = res.body;
     if (content_type.startsWith("text/html")) {
-        let bodyres = await replaceInResponseBody(body, "sydney.bing.com", WEB_CONFIG.WORKER_URL,res.headers); 
-        bodyres = await replaceInResponseBody(bodyres.body, "r.bing.com", WEB_CONFIG.WORKER_URL,res.headers); 
-  //      bodyres = await replaceInResponseBody(bodyres.body, "CodexBundle:cib-bundle\" src=\"https://r.bing.com", "CodexBundle:cib-bundle\" src=\"https://" + WEB_CONFIG.WORKER_URL, res.headers);
+    let bodyres = await replaceInResponseBody(body, "sydney.bing.com", WEB_CONFIG.WORKER_URL,res.headers); 
+       bodyres = await replaceInResponseBody(bodyres.body, "r.bing.com", WEB_CONFIG.WORKER_URL,res.headers); 
+     //  bodyres = await replaceInResponseBody(bodyres.body, "CodexBundle:cib-bundle\" src=\"https://r.bing.com", "CodexBundle:cib-bundle\" src=\"https://" + WEB_CONFIG.WORKER_URL, res.headers);
        bodyres = await replaceInResponseBody(bodyres.body, "th.bing.com", WEB_CONFIG.WORKER_URL,res.headers); 
       body = bodyres.body;
-    } 
+      } 
   return {body, encoding};
 }
+
 
 const rewritejsBody = async (res) => {
     const content_type = res.headers.get("Content-Type") || "";
@@ -82,8 +85,9 @@ const rewritejsBody = async (res) => {
         if (decodedContent) {
           // @ts-ignore
           body = decodedContent.replaceAll("www.bing.com", WEB_CONFIG.WORKER_URL.replace("http://", "").replace("https://", ""));
-            const bodyres = await replaceInResponseBody(body, "sydney.bing.com", WEB_CONFIG.WORKER_URL,res.headers); 
-          body = bodyres.body;
+            let bodyres = await replaceInResponseBody(body, "sydney.bing.com", WEB_CONFIG.WORKER_URL,res.headers); 
+              bodyres = await replaceInResponseBody(bodyres.body, "r.bing.com", WEB_CONFIG.WORKER_URL,res.headers); 
+            body = bodyres.body;
         }
       }
     }
@@ -126,6 +130,7 @@ async function handleWebSocket(request) {
   let serverUrl = "https://sydney.bing.com";
   
   const currentUrl = new URL(request.url);
+
   const fetchUrl = new URL(serverUrl + currentUrl.pathname + currentUrl.search);
   let serverRequest = new Request(fetchUrl, request);
   serverRequest.headers.set('origin', 'https://www.bing.com');
@@ -161,21 +166,42 @@ async function handleRequest(request, env) {
       WEB_CONFIG.WORKER_URL = uri.hostname;
     }
 
-  const cibname = await fetchAndExtractVariableString();
-    const ciburl = '/rp/' + cibname + '.br.js';
-
+  const cibname = await fetchAndExtractVariableString('https://nagse-bingcib.hf.space');
+  const ciburl = '/rp/' + cibname ;
 
 if (uri.pathname.includes('/turing/conversation/')){  
      uri.hostname = 'free.nbing.eu.org';
      return fetch(new Request(uri.toString(), request));
 }
+  if (uri.pathname.startsWith('/sydney/')){  
+     uri.hostname = 'sydney.bing.com';
+     return fetch(new Request(uri.toString(), request));
+}
+ if (uri.pathname.startsWith('/designer/')) {
+       uri.hostname = 'designer.microsoft.com';
+     return fetch(new Request(uri.toString(), request));
+}
+  if (uri.pathname.startsWith('/th')) {
+       uri.hostname = 'th.bing.com';
+     return fetch(new Request(uri.toString(), request));
+}
+    if (uri.pathname.startsWith('/opaluqu')) {
+       uri.hostname = 'sr.bing.com';
+     return fetch(new Request(uri.toString(), request));
+}  
+    if (uri.pathname.startsWith('/edgesvc')) {
+       uri.hostname = 'edgeservices.bing.com';
+     return fetch(new Request(uri.toString(), request));
+}
+  
     // 获取原始路径的内容
    uri.hostname = 'sokwith-proxybing.hf.space';
     const chatResponse = await fetch(new Request(uri.toString(), request));
   let newRes ;
-
+ 
   if (uri.pathname.includes(ciburl)   && !uri.pathname.includes('rp/wAMGEgzu6dXMQl4NYW_4fU74uOk.br.js')){
-    const ovURL = 'https://www.bing.com' + ciburl;
+   const ovURL = 'https://r.bing.com' + ciburl;
+  //  const ovURL = 'https://raw.githubusercontent.com/SokWith/webbing/main/rp/-Kc8IFliASxPpbk8y8d9exvjtdg.br.js';
      const jsResponse = await fetch(ovURL);
      const jsresult = await rewritejsBody(jsResponse);
      newRes = new Response(jsresult.body, {
@@ -193,13 +219,15 @@ if (uri.pathname.includes('/turing/conversation/')){
       statusText: chatResponse.statusText,
       headers: chatResponse.headers,
     });
-
+  
 // 设置其他需要的属性
 newRes.headers.set('Access-Control-Allow-Methods', 'GET,HEAD,POST,OPTIONS');
 newRes.headers.set('Access-Control-Allow-Credentials', 'true');
 newRes.headers.set('Access-Control-Allow-Headers', '*');
 newRes.headers.set('Access-Control-Allow-Origin', '*'); //允许所有域的访问
-  newRes.headers.set('CIBurl', ciburl);
+newRes.headers.set('CIBurl', cibname);
+
+      
 // 返回新的 Response 对象
 return newRes;
 }
