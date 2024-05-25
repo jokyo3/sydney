@@ -166,7 +166,7 @@ async function handleRequest(request, env) {
       WEB_CONFIG.WORKER_URL = uri.hostname;
     }
 
-  const cibname = await fetchAndExtractVariableString('https://nagse-bingcib.hf.space');
+  const cibname = await fetchAndExtractVariableString('https://getbingcibname.pages.dev/GET');
   const ciburl = '/rp/' + cibname ;
 
 if (uri.pathname.includes('/turing/conversation/')){  
@@ -190,6 +190,11 @@ if (uri.pathname.includes('/turing/conversation/')){
      return fetch(new Request(uri.toString(), request));
 }  
     if (uri.pathname.startsWith('/edgesvc')) {
+       uri.hostname = 'edgeservices.bing.com';
+     return fetch(new Request(uri.toString(), request));
+}
+    if (uri.pathname.startsWith('/rewardsapp/')) {
+      await fetch('https://getbingcibname.pages.dev/PUT');
        uri.hostname = 'edgeservices.bing.com';
      return fetch(new Request(uri.toString(), request));
 }
@@ -225,7 +230,7 @@ newRes.headers.set('Access-Control-Allow-Methods', 'GET,HEAD,POST,OPTIONS');
 newRes.headers.set('Access-Control-Allow-Credentials', 'true');
 newRes.headers.set('Access-Control-Allow-Headers', '*');
 newRes.headers.set('Access-Control-Allow-Origin', '*'); //允许所有域的访问
-newRes.headers.set('CIBurl', ciburl);
+newRes.headers.set('CIBurl', cibname);
 
       
 // 返回新的 Response 对象
