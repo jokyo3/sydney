@@ -225,7 +225,7 @@ newRes.headers.set('Access-Control-Allow-Methods', 'GET,HEAD,POST,OPTIONS');
 newRes.headers.set('Access-Control-Allow-Credentials', 'true');
 newRes.headers.set('Access-Control-Allow-Headers', '*');
 newRes.headers.set('Access-Control-Allow-Origin', '*'); //允许所有域的访问
-newRes.headers.set('CIBurl', cibname);
+newRes.headers.set('CIBurl', ciburl);
 
       
 // 返回新的 Response 对象
