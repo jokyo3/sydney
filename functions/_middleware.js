@@ -174,9 +174,9 @@ if (uri.pathname.includes('/turing/conversation/')){
      uri.hostname = 'free.nbing.eu.org';
      return fetch(new Request(uri.toString(), request));
 }
-  if (uri.pathname.startsWith('/sydney/')){  
-     uri.hostname = 'sydney.bing.com';
-     return fetch(new Request(uri.toString(), request));
+//  if (uri.pathname.startsWith('/sydney/')){  
+//     uri.hostname = 'sydney.bing.com';
+//     return fetch(new Request(uri.toString(), request));
 }
  if (uri.pathname.startsWith('/designer/')) {
        uri.hostname = 'designer.microsoft.com';
