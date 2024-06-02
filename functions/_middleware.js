@@ -53,7 +53,7 @@ async function replaceInResponseBody(resBody, originalString, replacementString,
 const rewritetxtBody = async (res) => {
     const content_type = res.headers.get("Content-Type") || "";
     const content_encoding = res.headers.get("Content-Encoding") || "";
-    let encoding = content_encoding;
+    let encoding = null;
     let body = res.body;
     if (content_type.startsWith("text/html")) {
     let bodyres = await replaceInResponseBody(body, "sydney.bing.com", WEB_CONFIG.WORKER_URL,res.headers); 
@@ -61,8 +61,9 @@ const rewritetxtBody = async (res) => {
      //  bodyres = await replaceInResponseBody(bodyres.body, "CodexBundle:cib-bundle\" src=\"https://r.bing.com", "CodexBundle:cib-bundle\" src=\"https://" + WEB_CONFIG.WORKER_URL, res.headers);
        bodyres = await replaceInResponseBody(bodyres.body, "th.bing.com", WEB_CONFIG.WORKER_URL,res.headers); 
       body = bodyres.body;
+      return {body, encoding};  
       } 
-  return {body, encoding};
+  return {body, content_encoding};
 }
 
 
