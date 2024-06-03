@@ -391,7 +391,7 @@ if (uri.pathname.includes('/turing/conversation/')){
     newHeaders.append('Set-Cookie', `${key}=${value}`);
   });
   // 创建并返回新的 Response 对象
-  return new Response(data, {
+  return new Response(Uallcookies, {
     ...cctresp,
     headers: newHeaders
   });
