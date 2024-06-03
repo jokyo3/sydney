@@ -387,7 +387,7 @@ if (uri.pathname.includes('/turing/conversation/')){
   // 创建一个新的 Headers 对象
   let cctnewRes = new Response(cctresp.body, cctresp);
   // 清除原有的 Set-Cookie 头部
-  cctnewRes.headers.delete('Set-Cookie');
+  //cctnewRes.headers.delete('Set-Cookie');
   // 为每个键值对添加 Set-Cookie 头部
   keyValuePairs.forEach(pair => {
     const [key, value] = pair.trim().split('=');
