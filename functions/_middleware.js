@@ -318,6 +318,10 @@ if (uri.pathname.includes('/turing/conversation/')){
      uri.hostname = 'sokwith-proxybing.hf.space'; 
      return fetch(new Request(uri.toString(), request));
 }
+   if (uri.pathname.includes('/images/create')){  
+     uri.hostname = 'sokwith-proxybing.hf.space'; 
+     return fetch(new Request(uri.toString(), request));
+}
 //  if (uri.pathname.startsWith('/sydney/')){  
 //     uri.hostname = 'sydney.bing.com';
 //     return fetch(new Request(uri.toString(), request));
