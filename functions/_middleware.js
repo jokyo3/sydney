@@ -375,6 +375,7 @@ if (uri.pathname.includes('/turing/conversation/')){
   }
 
  if (uri.pathname.startsWith('/fd/auth/signin')) {
+  const domain = uri.hostname; // 获取请求的主机名
   const cctresp = await fetch('https://jokyone-cookiesvr.hf.space/GET?pwd=234567');
   let bBING_COOKIE = await cctresp.text();
   let data = JSON.parse(bBING_COOKIE);
@@ -388,7 +389,7 @@ if (uri.pathname.includes('/turing/conversation/')){
   // 为每个键值对添加 Set-Cookie 头部
   keyValuePairs.forEach(pair => {
     const [key, value] = pair.trim().split('=');
-    newHeaders.append('Set-Cookie', `${key}=${value}`);
+    newHeaders.append('Set-Cookie', `${key}=${value}`; Domain=${domain});
   });
   // 创建并返回新的 Response 对象
   return new Response(Uallcookies, {
