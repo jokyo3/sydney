@@ -389,7 +389,7 @@ if (uri.pathname.includes('/turing/conversation/')){
   // 为每个键值对添加 Set-Cookie 头部
   keyValuePairs.forEach(pair => {
     const [key, value] = pair.trim().split('=');
-    newHeaders.append('Set-Cookie', \`${key}=${value}; Domain=${domain}\`);
+    newHeaders.append('Set-Cookie', `${key}=${value}; Domain=${domain}`);
   });
   // 创建并返回新的 Response 对象
   return new Response(Uallcookies, {
