@@ -1,6 +1,5 @@
 
 // pages/functions/_middleware.js
-import { brotli_decode } from "./bjs.js"
 const CUSTOM_OPTIONS = {
   KievRPSSecAuth: '',
   _RwBf: '',
@@ -195,20 +194,6 @@ const rewriteBody = async (res) => {
   }
   return { body, content_encoding };
 }
-
-
-const rewritetxtBody = async (res) => {
-    const content_type = res.headers.get("Content-Type") || "";
-    const content_encoding = res.headers.get("Content-Encoding") || "";
-    let encoding = null;
-    let body = res.body;
-    if (content_type.startsWith("text/html") ) {
-      let decodedContent = new TextDecoder("utf-8").decode(new Int8Array(await res.clone().arrayBuffer()));
-        body = replaceURL(decodedContent);
-       return { body, encoding };
-      }
-    return { body, content_encoding };
-  }
   
 /**
  * home
