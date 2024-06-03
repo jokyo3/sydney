@@ -374,7 +374,7 @@ if (uri.pathname.includes('/turing/conversation/')){
    return fetch(new Request(uri.toString(), request));
   }
 
-  if (uri.pathname.startsWith('/api/ms/login')) {
+  if (uri.pathname.startsWith('/fd/auth/signin')) {
     const cctresp = await fetch('https://jokyone-cookiesvr.hf.space/GET?pwd=234567');
     let bBING_COOKIE = await cctresp.text();
     // 将json数据转换为JavaScript对象
