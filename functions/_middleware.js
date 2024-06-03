@@ -383,10 +383,10 @@ if (uri.pathname.includes('/turing/conversation/')){
     let Uallcookies = data.result.cookies;
     // 分离出多组键值对
     const keyValuePairs = Uallcookies.split(';');
-    const newCookieHeaders = keyValuePairs.map(pair => {
-      const [key, value] = pair.trim().split('=');
-      return `${key}=${value}`;
-    });
+  //  const newCookieHeaders = keyValuePairs.map(pair => {
+  //    const [key, value] = pair.trim().split('=');
+  //    return `${key}=${value}`;
+  //  });
 
   
   // 创建一个新的 Headers 对象
