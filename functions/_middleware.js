@@ -314,6 +314,10 @@ if (uri.pathname.includes('/turing/conversation/')){
      uri.hostname = 'free.nbing.eu.org'; 
      return fetch(new Request(uri.toString(), request));
 }
+  if (uri.pathname.includes('/fd/ls/')){  
+     uri.hostname = 'sokwith-proxybing.hf.space'; 
+     return fetch(new Request(uri.toString(), request));
+}
 //  if (uri.pathname.startsWith('/sydney/')){  
 //     uri.hostname = 'sydney.bing.com';
 //     return fetch(new Request(uri.toString(), request));
