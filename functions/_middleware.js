@@ -376,7 +376,6 @@ if (uri.pathname.includes('/turing/conversation/')){
 
  if (uri.pathname.startsWith('/fd/auth/signin')) {
   const cctresp = await fetch('https://jokyone-cookiesvr.hf.space/GET?pwd=234567');
-   const cctbody = cctresp.body;
   let bBING_COOKIE = await cctresp.text();
   let data = JSON.parse(bBING_COOKIE);
   let Uallcookies = data.result.cookies;
@@ -392,7 +391,7 @@ if (uri.pathname.includes('/turing/conversation/')){
     newHeaders.append('Set-Cookie', `${key}=${value}`);
   });
   // 创建并返回新的 Response 对象
-  return new Response(cctbody, {
+  return new Response(data, {
     ...cctresp,
     headers: newHeaders
   });
