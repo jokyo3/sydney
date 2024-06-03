@@ -374,28 +374,29 @@ if (uri.pathname.includes('/turing/conversation/')){
    return fetch(new Request(uri.toString(), request));
   }
 
-  if (uri.pathname.startsWith('/fd/auth/')) {
-    const cctresp = await fetch('https://jokyone-cookiesvr.hf.space/GET?pwd=234567');
-    let bBING_COOKIE = await cctresp.text();
-    // 将json数据转换为JavaScript对象
-    let data = JSON.parse(bBING_COOKIE);
-    // 从对象中获取cookies的值
-    let Uallcookies = data.result.cookies;
-    // 分离出多组键值对
-    const keyValuePairs = Uallcookies.split(';');
-  
+ if (uri.pathname.startsWith('/fd/auth/signin')) {
+  const cctresp = await fetch('https://jokyone-cookiesvr.hf.space/GET?pwd=234567');
+  let bBING_COOKIE = await cctresp.text();
+  let data = JSON.parse(bBING_COOKIE);
+  let Uallcookies = data.result.cookies;
+  const keyValuePairs = Uallcookies.split(';');
+
   // 创建一个新的 Headers 对象
-  let cctnewRes = new Response(cctresp.body, cctresp);
+  let newHeaders = new Headers(cctresp.headers);
   // 清除原有的 Set-Cookie 头部
-  //cctnewRes.headers.delete('Set-Cookie');
+  newHeaders.delete('Set-Cookie');
   // 为每个键值对添加 Set-Cookie 头部
-//  keyValuePairs.forEach(pair => {
-//    const [key, value] = pair.trim().split('=');
-//    cctnewRes.headers.append('Set-Cookie', `${key}=${value}`);
-//  });
+  keyValuePairs.forEach(pair => {
+    const [key, value] = pair.trim().split('=');
+    newHeaders.append('Set-Cookie', `${key}=${value}`);
+  });
   // 创建并返回新的 Response 对象
-  return cctnewRes;
-  }
+  return new Response(cctresp.body, {
+    ...cctresp,
+    headers: newHeaders
+  });
+}
+
 
     let newRes ;
   
