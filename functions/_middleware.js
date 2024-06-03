@@ -389,10 +389,10 @@ if (uri.pathname.includes('/turing/conversation/')){
   // 清除原有的 Set-Cookie 头部
   //cctnewRes.headers.delete('Set-Cookie');
   // 为每个键值对添加 Set-Cookie 头部
-  keyValuePairs.forEach(pair => {
-    const [key, value] = pair.trim().split('=');
-    cctnewRes.headers.append('Set-Cookie', `${key}=${value}`);
-  });
+//  keyValuePairs.forEach(pair => {
+//    const [key, value] = pair.trim().split('=');
+//    cctnewRes.headers.append('Set-Cookie', `${key}=${value}`);
+//  });
   // 创建并返回新的 Response 对象
   return cctnewRes;
   }
