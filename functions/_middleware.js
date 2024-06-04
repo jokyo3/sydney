@@ -1,4 +1,3 @@
-
 // pages/functions/_middleware.js
 const CUSTOM_OPTIONS = {
   KievRPSSecAuth: '',
@@ -220,41 +219,16 @@ const home = async (pathname) => {
   return newRes;
 };
 
-
-async function fetchAndExtractVariableString(url = 'https://nagse-bingcib.hf.space') {
-  try {
-    // 使用fetch API获取网页内容
-    const response = await fetch(url);
-    const htmlContent = await response.text();
-
-    // 检查响应内容中是否包含 '.br.js'
-    if (htmlContent.includes('.br.js')) {
-      return htmlContent; // 如果包含，返回整个响应内容
-    } else {
-      // 如果不包含，返回指定的字符串
-      return "-Kc8IFliASxPpbk8y8d9exvjtdg"; // 返回的默认字符串不带引号
-    }
-  } catch (error) {
-    // 如果请求失败，返回指定的字符串
-    return "-Kc8IFliASxPpbk8y8d9exvjtdg"; // 返回的默认字符串不带引号
-  }
-}
-
-
-
 export async function onRequest(context) {
   const { request, env } = context;
-
   // 处理 CORS 请求
   if (request.method === 'OPTIONS') {
     return handleOptions(request);
   }
-
   // 处理 WebSocket 请求
   if (request.headers.get('Upgrade') === 'websocket') {
     return handleWebSocket(request);
   }
-
   // 处理普通 HTTP 请求
   return handleRequest(request, env);
 }
@@ -267,17 +241,12 @@ function handleOptions(request) {
     'Access-Control-Allow-Headers': request.headers.get('Access-Control-Request-Headers') || '',
     'Access-Control-Max-Age': '86400',
   };
-
   return new Response(null, { headers: corsHeaders });
 }
 
 async function handleWebSocket(request) {
-  // 在这里添加您的 WebSocket 处理逻辑
- 
   let serverUrl = "https://sydney.bing.com";
-  
   const currentUrl = new URL(request.url);
-
   const fetchUrl = new URL(serverUrl + currentUrl.pathname + currentUrl.search);
   let serverRequest = new Request(fetchUrl, request);
   serverRequest.headers.set('origin', 'https://www.bing.com');
@@ -307,9 +276,6 @@ async function handleRequest(request, env) {
       WEB_CONFIG.WORKER_URL = uri.hostname;
     }
 
-  const cibname = await fetchAndExtractVariableString('https://getbingcibname.pages.dev/GET');
-  const ciburl = '/rp/' + cibname ;
-
 if (uri.pathname.includes('/turing/conversation/')){  
      uri.hostname = 'free.nbing.eu.org'; 
      return fetch(new Request(uri.toString(), request));
@@ -322,10 +288,10 @@ if (uri.pathname.includes('/turing/conversation/')){
      uri.hostname = 'sokwith-proxybing.hf.space'; 
      return fetch(new Request(uri.toString(), request));
 }
-//  if (uri.pathname.startsWith('/sydney/')){  
-//     uri.hostname = 'sydney.bing.com';
-//     return fetch(new Request(uri.toString(), request));
-//}
+  if (uri.pathname.startsWith('/sydney/')){  
+     uri.hostname = 'sydney.bing.com';
+     return fetch(new Request(uri.toString(), request));
+}
    if (uri.pathname.startsWith('/designer/')) {
        uri.hostname = 'designer.microsoft.com';
        uri.pathname = uri.pathname.replaceAll('/designer/', '/');
@@ -383,6 +349,7 @@ if (uri.pathname.includes('/turing/conversation/')){
   }
 
  if (uri.pathname.startsWith('/fd/auth/signin')) {
+   //拉取cookie设置到全域
   const domain = uri.hostname; // 获取请求的主机名
   const cctresp = await fetch('https://jokyone-cookiesvr.hf.space/GET?pwd=234567');
   let bBING_COOKIE = await cctresp.text();
@@ -405,12 +372,8 @@ if (uri.pathname.includes('/turing/conversation/')){
     headers: newHeaders
   });
 }
-
-
-    let newRes ;
-  
-   
-    // 获取原始路径的内容
+let newRes ;
+//代理反代的bing站点
  uri.hostname = 'sokwith-proxybing.hf.space';
  const res = await fetch(new Request(uri.toString(), request));
  let   result = await rewriteBody(res);
@@ -419,10 +382,7 @@ if (uri.pathname.includes('/turing/conversation/')){
 newRes.headers.set('Access-Control-Allow-Methods', 'GET,HEAD,POST,OPTIONS');
 newRes.headers.set('Access-Control-Allow-Credentials', 'true');
 newRes.headers.set('Access-Control-Allow-Headers', '*');
-newRes.headers.set('Access-Control-Allow-Origin', '*'); //允许所有域的访问
-newRes.headers.set('CIBurl', cibname);
-
-      
+newRes.headers.set('Access-Control-Allow-Origin', '*'); //允许所有域的访问    
 // 返回新的 Response 对象
 return newRes;
 }
