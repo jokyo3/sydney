@@ -226,9 +226,9 @@ export async function onRequest(context) {
     return handleOptions(request);
   }
   // 处理 WebSocket 请求
-  if (request.headers.get('Upgrade') === 'websocket') {
-    return handleWebSocket(request);
-  }
+ // if (request.headers.get('Upgrade') === 'websocket') {
+ //   return handleWebSocket(request);
+ // }
   // 处理普通 HTTP 请求
   return handleRequest(request, env);
 }
