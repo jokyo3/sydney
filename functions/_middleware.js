@@ -399,15 +399,9 @@ if (uri.pathname.includes('/turing/conversation/')){
     const [key, value] = pair.trim().split('=');
     newHeaders.append('Set-Cookie', `${key}=${value}; Domain=${domain}; Path=/`);
   });
-   // 创建一个新的请求对象
-  const newReq = new Request(uri, {
-    method: 'GET', // 或者根据需要的HTTP方法
-    headers: newHeaders
-  });
-
-  // 创建并返回新的 Response 对象，不包含body
+   // 创建并返回新的 Response 对象
   return new Response(null, {
-    status: 204, // 204 No Content
+    status: 204,
     headers: newHeaders
   });
 }
