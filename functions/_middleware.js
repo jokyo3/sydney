@@ -396,16 +396,16 @@ if (uri.pathname.includes('/turing/conversation/')){
       redirect: 'manual',
     });
 
- const res = await fetch(newReq);
- let   result = await rewriteBody(res);
-  newRes = new Response(result.body, res);
+ const imgres = await fetch(newReq);
+ let   imgresult = await rewriteBody(imgres);
+ let  imgnewRes = new Response(imgresult.body, imgres);
 // 设置其他需要的属性
-newRes.headers.set('Access-Control-Allow-Methods', 'GET,HEAD,POST,OPTIONS');
-newRes.headers.set('Access-Control-Allow-Credentials', 'true');
-newRes.headers.set('Access-Control-Allow-Headers', '*');
-newRes.headers.set('Access-Control-Allow-Origin', '*'); //允许所有域的访问
-newRes.headers.set('CIBurl', cibname);
-return newRes;
+imgnewRes.headers.set('Access-Control-Allow-Methods', 'GET,HEAD,POST,OPTIONS');
+imgnewRes.headers.set('Access-Control-Allow-Credentials', 'true');
+imgnewRes.headers.set('Access-Control-Allow-Headers', '*');
+imgnewRes.headers.set('Access-Control-Allow-Origin', '*'); //允许所有域的访问
+//imgnewRes.headers.set('CIBurl', cibname);
+return imgnewRes;
 }
   if (uri.pathname.includes('/fd/ls/')){  
      uri.hostname = 'sokwith-proxybing.hf.space'; 
