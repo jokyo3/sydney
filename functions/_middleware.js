@@ -1,16 +1,14 @@
-// pages/functions/_middleware.js
-import { bingapiModels, bingapiModel, bingapiChat, bingapiImage, getRandomIP } from "./bingapi.js"
 
-// 同查找 _U 一样, 查找 KievRPSSecAuth 的值并替换下方的xxx
+// pages/functions/_middleware.js
 const CUSTOM_OPTIONS = {
   KievRPSSecAuth: '',
   _RwBf: '',
   MUID: '',
   _U: '',
 
-  BYPASS_SERVER: 'https://cct.nbing.eu.org',
+  BYPASS_SERVER: '',
   APIKEY: '',
-  Go_Proxy_BingAI_BLANK_API_KEY: true,
+  Go_Proxy_BingAI_BLANK_API_KEY: false,
 
   Go_Proxy_BingAI_AUTH_KEY: '',
 
@@ -18,18 +16,20 @@ const CUSTOM_OPTIONS = {
   NIGHTLY: false,
 }
 
+function sleep(seconds) {
+  return new Promise(resolve => setTimeout(resolve, seconds * 1000));
+}
+
+
 const WEB_CONFIG = {
   WORKER_URL: '', // 如无特殊需求请，保持为''
 };
 
 const RAND_IP_COOKIE_NAME = 'BingAI_Rand_IP';
-const AUTH_KEY_COOKIE_NAME = 'BingAI_Auth_Key';
-
 const SYDNEY_ORIGIN = 'https://sydney.bing.com';
-const SYDNEY_PROXY = 'https://prosydney.nbing.eu.org';
 const BING_ORIGIN = 'https://www.bing.com';
 const BING_PROXY = 'https://sokwith-proxybing.hf.space';
-const BING_FREE = 'https://free.nbing.eu.org';
+const R_ORIGIN = 'https://r.bing.com';
 const BING_SOURCE_ORIGIN = 'https://th.bing.com';
 const BING_SR_ORIGIN = 'https://sr.bing.com';
 const EDGE_ORIGIN = 'https://edgeservices.bing.com';
@@ -66,13 +66,87 @@ const KEEP_REQ_HEADERS = [
 ];
 
 
-/**
- * 随机整数 [min,max)
- * @param {number} min
- * @param {number} max
- * @returns
- */
-const getRandomInt = (min, max) => Math.floor(Math.random() * (max - min)) + min;
+
+const IP_RANGE = [
+    ['4.150.64.0', '4.150.127.255'],       // Azure Cloud EastUS2 16382
+    ['4.152.0.0', '4.153.255.255'],        // Azure Cloud EastUS2 131070
+    ['13.68.0.0', '13.68.127.255'],        // Azure Cloud EastUS2 32766
+    ['13.104.216.0', '13.104.216.255'],    // Azure EastUS2 256
+    ['20.1.128.0', '20.1.255.255'],        // Azure Cloud EastUS2 32766
+    ['20.7.0.0', '20.7.255.255'],          // Azure Cloud EastUS2 65534
+    ['20.22.0.0', '20.22.255.255'],        // Azure Cloud EastUS2 65534
+    ['40.84.0.0', '40.84.127.255'],        // Azure Cloud EastUS2 32766
+    ['40.123.0.0', '40.123.127.255'],      // Azure Cloud EastUS2 32766
+    ['4.214.0.0', '4.215.255.255'],        // Azure Cloud JapanEast 131070
+    ['4.241.0.0', '4.241.255.255'],        // Azure Cloud JapanEast 65534
+    ['40.115.128.0', '40.115.255.255'],    // Azure Cloud JapanEast 32766
+    ['52.140.192.0', '52.140.255.255'],    // Azure Cloud JapanEast 16382
+    ['104.41.160.0', '104.41.191.255'],    // Azure Cloud JapanEast 8190
+    ['138.91.0.0', '138.91.15.255'],       // Azure Cloud JapanEast 4094
+    ['151.206.65.0', '151.206.79.255'],    // Azure Cloud JapanEast 256
+    ['191.237.240.0', '191.237.241.255'],  // Azure Cloud JapanEast 512
+    ['4.208.0.0', '4.209.255.255'],        // Azure Cloud NorthEurope 131070
+    ['52.169.0.0', '52.169.255.255'],      // Azure Cloud NorthEurope 65534
+    ['68.219.0.0', '68.219.127.255'],      // Azure Cloud NorthEurope 32766
+    ['65.52.64.0', '65.52.79.255'],        // Azure Cloud NorthEurope 4094
+    ['98.71.0.0', '98.71.127.255'],        // Azure Cloud NorthEurope 32766
+    ['74.234.0.0', '74.234.127.255'],      // Azure Cloud NorthEurope 32766
+    ['4.151.0.0', '4.151.255.255'],        // Azure Cloud SouthCentralUS 65534
+    ['13.84.0.0', '13.85.255.255'],        // Azure Cloud SouthCentralUS 131070
+    ['4.255.128.0', '4.255.255.255'],      // Azure Cloud WestCentralUS 32766
+    ['13.78.128.0', '13.78.255.255'],      // Azure Cloud WestCentralUS 32766
+    ['4.175.0.0', '4.175.255.255'],        // Azure Cloud WestEurope 65534
+    ['13.80.0.0', '13.81.255.255'],        // Azure Cloud WestEurope 131070
+    ['20.73.0.0', '20.73.255.255'],        // Azure Cloud WestEurope 65534
+  ];
+  
+  /**
+   * 随机整数 [min,max)
+   * @param {number} min
+   * @param {number} max
+   * @returns
+   */
+  const getRandomInt = (min, max) => Math.floor(Math.random() * (max - min)) + min;
+  
+  /**
+   * ip 转 int
+   * @param {string} ip
+   * @returns
+   */
+  const ipToInt = (ip) => {
+    const ipArr = ip.split('.');
+    let result = 0;
+    result += +ipArr[0] << 24;
+    result += +ipArr[1] << 16;
+    result += +ipArr[2] << 8;
+    result += +ipArr[3];
+    return result;
+  };
+  
+  /**
+   * int 转 ip
+   * @param {number} intIP
+   * @returns
+   */
+  const intToIp = (intIP) => {
+    return `${(intIP >> 24) & 255}.${(intIP >> 16) & 255}.${(intIP >> 8) & 255}.${intIP & 255}`;
+  };
+  
+  /**
+   * Get Random IP
+   * @returns {string}
+   */
+  export const getRandomIP = () => {
+    const randIndex = getRandomInt(0, IP_RANGE.length);
+    const startIp = IP_RANGE[randIndex][0];
+    const endIp = IP_RANGE[randIndex][1];
+    const startIPInt = ipToInt(startIp);
+    const endIPInt = ipToInt(endIp);
+    const randomInt = getRandomInt(startIPInt, endIPInt);
+    const randomIP = intToIp(randomInt);
+    return randomIP;
+  };
+  
 
 /**
  * 生成随机字符串
@@ -90,6 +164,7 @@ const randomString = (e) => {
 const replaceURL = (body) => {
   body = body.replaceAll(BING_ORIGIN.replace("http://", "").replace("https://", ""), WEB_CONFIG.WORKER_URL.replace("http://", "").replace("https://", ""));
   body = body.replaceAll(SYDNEY_ORIGIN.replace("http://", "").replace("https://", ""), WEB_CONFIG.WORKER_URL.replace("http://", "").replace("https://", ""));
+  body = body.replaceAll(R_ORIGIN.replace("http://", "").replace("https://", ""), WEB_CONFIG.WORKER_URL.replace("http://", "").replace("https://", ""));
   body = body.replaceAll(EDGE_ORIGIN.replace("http://", "").replace("https://", ""), WEB_CONFIG.WORKER_URL.replace("http://", "").replace("https://", ""));
   body = body.replaceAll(BING_SOURCE_ORIGIN.replace("http://", "").replace("https://", ""), WEB_CONFIG.WORKER_URL.replace("http://", "").replace("https://", "") + '/th');
   body = body.replaceAll(DESIGNER_CDN_ORIGIN.replace("http://", "").replace("https://", ""), WEB_CONFIG.WORKER_URL.replace("http://", "").replace("https://", "") + '/designer-cdn');
@@ -105,25 +180,28 @@ const replaceURL = (body) => {
 
 const rewriteBody = async (res) => {
   const content_type = res.headers.get("Content-Type") || "";
+  const content_encoding = res.headers.get("Content-Encoding") || "";
   let encoding = null;
   let body = res.body;
   if (content_type.startsWith("text/html") || res.url.endsWith("js")) {
-    let decodedContent = new TextDecoder("utf-8").decode(new Int8Array(await res.clone().arrayBuffer()));
+    let decodedContent = null;
+    decodedContent = new TextDecoder("utf-8").decode(new Int8Array(await res.clone().arrayBuffer()));
     if (decodedContent) {
       // @ts-ignore
       body = replaceURL(decodedContent);
     }
+    return { body, encoding };
   }
-  return { body, encoding };
+  return { body, content_encoding };
 }
-
+  
 /**
  * home
  * @param {string} pathname
  * @returns
  */
 const home = async (pathname) => {
-  let url = 'https://sokwith-proxybing.hf.space/';
+  let url = 'https://sokwith-proxybing.hf.space';
   const res = await fetch(url);
   const result = await rewriteBody(res);
   const newRes = new Response(result.body, res);
@@ -142,161 +220,35 @@ const home = async (pathname) => {
   return newRes;
 };
 
-/**
- * challenge
- * @param {Request} request
- * @returns
- */
-const challenge = async (request) => {
-  if (request.method != 'GET') {
-    return Response.json({ code: 405, message: 'Method Not Allowed', data: null }, { status: 405 });
-  }
 
-  const currentUrl = new URL(request.url);
-  const newRes = new Response(challengeResponseBody.replaceAll('{{%s}}', currentUrl.searchParams.get('iframeid')));
-  newRes.headers.set('Content-Type', 'text/html; charset=utf-8');
-  return newRes
-};
+async function fetchAndExtractVariableString(url = 'https://nagse-bingcib.hf.space') {
+  try {
+    // 使用fetch API获取网页内容
+    const response = await fetch(url);
+    const htmlContent = await response.text();
 
-/**
- * verify
- * @param {Request} request
- * @param {String} cookie
- * @returns
- */
-const verify = async (request, cookie) => {
-  if (request.method != 'GET') {
-    return Response.json({ code: 405, message: 'Method Not Allowed', data: null }, { status: 405 });
-  }
-
-  let reqCookies = request.headers.get('Cookie').split('; ');
-  let bypassServer = CUSTOM_OPTIONS.BYPASS_SERVER;
-  for (let i = 0; i < reqCookies.length; i++) {
-    let cookie = reqCookies[i];
-    if (cookie.startsWith('BingAI_Pass_Server')) {
-      let tmp = cookie.replace('BingAI_Pass_Server=', '');
-      if (tmp !== '') {
-        bypassServer = tmp;
-        break;
-      }
+    // 检查响应内容中是否包含 '.br.js'
+    if (htmlContent.includes('.br.js')) {
+      return htmlContent; // 如果包含，返回整个响应内容
+    } else {
+      // 如果不包含，返回指定的字符串
+      return "-Kc8IFliASxPpbk8y8d9exvjtdg"; // 返回的默认字符串不带引号
     }
+  } catch (error) {
+    // 如果请求失败，返回指定的字符串
+    return "-Kc8IFliASxPpbk8y8d9exvjtdg"; // 返回的默认字符串不带引号
   }
+}
 
-  const currentUrl = new URL(request.url);
-  let req = {
-    'IG': currentUrl.searchParams.get('IG'),
-    'iframeid': currentUrl.searchParams.get('iframeid'),
-    'cookies': cookie,
-    'convId': currentUrl.searchParams.get('convId'),
-    'rid': currentUrl.searchParams.get('rid'),
-    'T': currentUrl.searchParams.get('T'),
-    'host': WEB_CONFIG.WORKER_URL.replace("http://", "").replace("https://", ""),
-  }
-  const newReq = new Request(bypassServer, {
-    method: 'POST',
-    body: JSON.stringify(req),
-  });
-  const res = await fetch(newReq)
-  if (res.status != 200) {
-    if (res.status === 451) {
-      return Response.json({ code: 451, message: "Verification Failed", data: null }, { status: 451 })
-    }
-    return Response.json({ code: 500, message: "Server Error", data: null }, { status: res.status })
-  }
-  const resData = await res.json();
 
-  const cookies = resData.result.cookies.split('; ')
-  const newRes = Response.json(JSON.stringify(resData));
-  for (let v of cookies) {
-    newRes.headers.append('Set-Cookie', v + '; path=/');
-  }
-  return newRes;
-};
-
-/**
- * pass
- * @param {Request} request
- * @param {String} cookie
- * @returns
- */
-const pass = async (request, cookie) => {
-  if (request.method != 'POST') {
-    return Response.json({ code: 405, message: 'Method Not Allowed', data: null }, { status: 405 });
-  }
-
-  let resqBody = JSON.parse(await request.text());
-
-  let reqCookies = request.headers.get('Cookie').split('; ');
-  let bypassServer = CUSTOM_OPTIONS.BYPASS_SERVER;
-  for (let i = 0; i < reqCookies.length; i++) {
-    let cookie = reqCookies[i];
-    if (cookie.startsWith('BingAI_Pass_Server')) {
-      let tmp = cookie.replace('BingAI_Pass_Server=', '');
-      if (tmp !== '') {
-        bypassServer = tmp;
-        break;
-      }
-    }
-  }
-
-  let req = {
-    'IG': resqBody['IG'],
-    'iframeid': "local-gen-" + crypto.randomUUID(),
-    'cookies': cookie,
-    'convId': '',
-    'rid': '',
-    'T': resqBody['T'],
-  }
-  const newReq = new Request(bypassServer, {
-    method: 'POST',
-    body: JSON.stringify(req),
-  });
-  return await fetch(newReq);
-};
-
-const login = async (url, headers) => {
-  // 解析URL以获取hostname作为domain
-  const uri = new URL(url);
-  const domain = uri.hostname; // 获取请求的主机名
-
-  // 发送请求以获取cookies
-  const cctresp = await fetch('https://jokyone-cookiesvr.hf.space/GET?pwd=234567');
-  let bBING_COOKIE = await cctresp.text();
-  let data = JSON.parse(bBING_COOKIE);
-  let Uallcookies = data.result.cookies;
-  const keyValuePairs = Uallcookies.split(';');
-
-  // 创建一个新的 Headers 对象
-  let newHeaders = new Headers(headers); // 使用传入的headers
-  // 清除原有的 Set-Cookie 头部
-  newHeaders.delete('Set-Cookie');
-  // 为每个键值对添加 Set-Cookie 头部
-  keyValuePairs.forEach(pair => {
-    const [key, value] = pair.trim().split('=');
-    newHeaders.append('Set-Cookie', `${key}=${value}; Domain=${domain}; Path=/`);
-  });
-
-  // 创建一个新的请求对象
-  const newReq = new Request(url, {
-    method: 'GET', // 或者根据需要的HTTP方法
-    headers: newHeaders
-  });
-
-  // 创建并返回新的 Response 对象，不包含body
-  return new Response(null, {
-    status: 204, // 204 No Content
-    headers: newHeaders
-  });
-};
-
-function processHeaders(request, targetHost) {
+function processHeaders(request, targetUrl) {
   const newHeaders = new Headers();
   request.headers.forEach((value, key) => {
     if (KEEP_REQ_HEADERS.includes(key)) {
       newHeaders.set(key, value);
     }
   });
-  newHeaders.set('host', targetHost);
+  newHeaders.set('host', targetUrl.host);
   newHeaders.set('origin', BING_ORIGIN);
   if (request.headers.has('referer') && request.headers.get('referer').indexOf('web/compose.html') != -1) {
     newHeaders.set('referer', 'https://edgeservices.bing.com/edgesvc/compose');
@@ -361,58 +313,6 @@ function processHeaders(request, targetHost) {
   return newHeaders;
 }
 
-      
-/**
- * bingapi
- * @param {Request} request
- * @param {String} cookie
- * @returns
- */
-const bingapi = async (request, cookie) => {
-  if (!CUSTOM_OPTIONS.Go_Proxy_BingAI_BLANK_API_KEY && CUSTOM_OPTIONS.APIKEY == '') {
-    CUSTOM_OPTIONS.APIKEY = 'sk-' + randomString(32);
-  }
-  const currentUrl = new URL(request.url);
-  if ((currentUrl.pathname.startsWith('/v1/models/')) || (currentUrl.pathname.startsWith('/api/v1/models/'))) {
-    return bingapiModel(request, Object.assign({ cookie: cookie }, CUSTOM_OPTIONS));
-  }
-  if (currentUrl.pathname.startsWith('/v1/models') || currentUrl.pathname.startsWith('/api/v1/models')) {
-    return bingapiModels(request, Object.assign({ cookie: cookie }, CUSTOM_OPTIONS));
-  }
-  if (currentUrl.pathname.startsWith('/v1/chat/completions') || currentUrl.pathname.startsWith('/api/v1/chat/completions')) {
-    if (request.method == 'OPTIONS') {
-      return Response.json({ code: 200, message: 'OPTIONS', data: null }, {
-        headers: {
-          "Allow": "POST, OPTIONS",
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods": "POST, OPTIONS",
-          "Access-Control-Allow-Headers": "Content-Type, Authorization, Cookie",
-        }
-      });
-    }
-    if (request.method != 'POST') {
-      return Response.json({ code: 405, message: 'Method Not Allowed', data: null }, { status: 405 });
-    }
-    return bingapiChat(request, Object.assign({ cookie: cookie }, CUSTOM_OPTIONS));
-  }
-  if (currentUrl.pathname.startsWith('/v1/images/generations') || currentUrl.pathname.startsWith('/api/v1/images/generations')) {
-    if (request.method == 'OPTIONS') {
-      return Response.json({ code: 200, message: 'OPTIONS', data: null }, {
-        headers: {
-          "Allow": "POST, OPTIONS",
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods": "POST, OPTIONS",
-          "Access-Control-Allow-Headers": "Content-Type, Authorization, Cookie",
-        }
-      });
-    }
-    if (request.method != 'POST') {
-      return Response.json({ code: 405, message: 'Method Not Allowed', data: null }, { status: 405 });
-    }
-    return bingapiImage(request, Object.assign({ cookie: cookie }, CUSTOM_OPTIONS));
-  }
-  return Response.json({ code: 404, message: 'API No Found', data: null }, { status: 404 });
-};
 
 export async function onRequest(context) {
   const { request, env } = context;
@@ -445,23 +345,17 @@ function handleOptions(request) {
 
 async function handleWebSocket(request) {
   // 在这里添加您的 WebSocket 处理逻辑
-  let serverUrl = "https://prosydney.nbing.eu.org";
+ 
+  let serverUrl = "https://sydney.bing.com";
+  
   const currentUrl = new URL(request.url);
+
   const fetchUrl = new URL(serverUrl + currentUrl.pathname + currentUrl.search);
   let serverRequest = new Request(fetchUrl, request);
   serverRequest.headers.set('origin', 'https://www.bing.com');
   serverRequest.headers.set('referer', 'https://www.bing.com/search?q=Bing+AI');
-     const oldUA = request.headers.get('user-agent') || '';
-    let isMobile = oldUA.includes('Mobile') || oldUA.includes('Android');
-    if (isMobile = true) {
-      newHeaders.set(
-        'user-agent',
-        'Mozilla/5.0 (iPhone; CPU iPhone OS 15_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.7 Mobile/15E148 Safari/605.1.15 BingSapphire/1.0.410427012'
-      );
-    } else {
-      newHeaders.set('user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36 Edg/113.0.1774.35');
-    }
-
+  serverRequest.headers.set('user-agent', 'Mozilla/5.0 (iPhone; CPU iPhone OS 15_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.7 Mobile/15E148 Safari/605.1.15 BingSapphire/1.0.410427012');
+  const res = await fetch(serverRequest);
   const newRes = new Response(res.body, res);
   newRes.headers.set('Access-Control-Allow-Methods', 'GET,HEAD,POST,OPTIONS');
   newRes.headers.set('Access-Control-Allow-Credentials', 'true');
@@ -480,107 +374,137 @@ async function handleWebSocket(request) {
 }
 
 async function handleRequest(request, env) {
- const currentUrl = new URL(request.url);
-    if (WEB_CONFIG.WORKER_URL == '') {
-      WEB_CONFIG.WORKER_URL = currentUrl.origin;
-    }
-    // if (currentUrl.pathname === '/' || currentUrl.pathname.startsWith('/github/')) {
-  //  if (currentUrl.pathname === '/') {
-  //    return home(currentUrl.pathname);
-  //  }
-    if (currentUrl.pathname.startsWith('/sysconf')) {
-      let isAuth = true;
-      if (CUSTOM_OPTIONS.Go_Proxy_BingAI_AUTH_KEY.length !== 0) {
-        const cookieStr = request.headers.get('Cookie') || '';
-        let cookieObjects = {};
-        cookieStr.split(';').forEach(item => {
-          if (!item) {
-            return;
-          }
-          const arr = item.split('=');
-          const key = arr[0].trim();
-          const val = arr.slice(1, arr.length+1).join('=').trim();
-          cookieObjects[key] = val;
-        })
-        if (cookieObjects[AUTH_KEY_COOKIE_NAME] !== CUSTOM_OPTIONS.Go_Proxy_BingAI_AUTH_KEY) {
-          isAuth = false;
-        }
-      }
-      return Response.json({ code: 200, message: 'success', data: { isSysCK: false, isAuth: isAuth, info: CUSTOM_OPTIONS.INFO } })
+  let uri = new URL(request.url);
+     if (WEB_CONFIG.WORKER_URL == '') {
+      WEB_CONFIG.WORKER_URL = uri.hostname;
     }
 
-    let targetUrl;
-    if (currentUrl.pathname.startsWith('/sydney')) {
-      targetUrl = new URL(SYDNEY_PROXY + currentUrl.pathname + currentUrl.search);
-    
-    } else if (currentUrl.pathname.startsWith('/turing')) {
-      targetUrl = new URL(BING_FREE + currentUrl.pathname + currentUrl.search);
-    } else if (currentUrl.pathname.startsWith('/images/create')) {
-      targetUrl = new URL(BING_ORIGIN + currentUrl.pathname + currentUrl.search);
-    
-    } else if (currentUrl.pathname.startsWith('/th')) {
-      targetUrl = new URL(BING_SOURCE_ORIGIN + currentUrl.pathname.replaceAll('/th/th', '/th') + currentUrl.search);
-    } else if (currentUrl.pathname.startsWith('/edgesvc')) {
-      targetUrl = new URL(EDGE_ORIGIN + currentUrl.pathname + currentUrl.search);
-    } else if (currentUrl.pathname.startsWith('/opaluqu')) {
-      targetUrl = new URL(BING_SR_ORIGIN + currentUrl.pathname + currentUrl.search);
-    } else if (currentUrl.pathname.startsWith('/designer/')) {
-      targetUrl = new URL(DESIGNER_ORIGIN + currentUrl.pathname.replaceAll('/designer/', '/') + currentUrl.search);
-    } else if (currentUrl.pathname.startsWith('/designer-cdn/')) {
-      targetUrl = new URL(DESIGNER_CDN_ORIGIN + currentUrl.pathname.replaceAll('/designer-cdn/', '/') + currentUrl.search);
-    } else if (currentUrl.pathname.startsWith('/designer-app/')) {
-      targetUrl = new URL(DESIGNER_APP_ORIGIN + currentUrl.pathname.replaceAll('/designer-app/', '/') + currentUrl.search);
-    } else if (currentUrl.pathname.startsWith('/designer-app-edog/')) {
-      targetUrl = new URL(DESIGNER_APP_EDOG_ORIGIN + currentUrl.pathname.replaceAll('/designer-app-edog/', '/') + currentUrl.search);
-    } else if (currentUrl.pathname.startsWith('/designer-document/')) {
-      targetUrl = new URL(DESIGNER_DOCUMENT_ORIGIN + currentUrl.pathname.replaceAll('/designer-document/', '/') + currentUrl.search);
-    } else if (currentUrl.pathname.startsWith('/designer-userassets/')) {
-      targetUrl = new URL(DESIGNER_USERASSETS_ORIGIN + currentUrl.pathname.replaceAll('/designer-userassets/', '/') + currentUrl.search);
-    } else if (currentUrl.pathname.startsWith('/designer-mediasuggestion/')) {
-      targetUrl = new URL(DESIGNER_MEDIASUGGESTION_ORIGIN + currentUrl.pathname.replaceAll('/designer-mediasuggestion/', '/') + currentUrl.search);
-    } else if (currentUrl.pathname.startsWith('/designer-rtc/')) {
-      targetUrl = new URL(DESIGNER_RTC_ORIGIN + currentUrl.pathname.replaceAll('/designer-rtc/', '/') + currentUrl.search);
-    } else if (currentUrl.pathname.startsWith('/api/ms/login')) {
-      targetUrl = new URL(CUSTOM_OPTIONS.BYPASS_SERVER + currentUrl.pathname + currentUrl.search);
-    } else {
-      targetUrl = new URL(BING_PROXY + currentUrl.pathname + currentUrl.search);
-    }
+  const cibname = await fetchAndExtractVariableString('https://getbingcibname.pages.dev/GET');
+  const ciburl = '/rp/' + cibname ;
 
-    let newHeaders = processHeaders(request, targetUrl.host);
-    let cookiesValue = newHeaders.get('Cookie');
- 
-    if (currentUrl.pathname.startsWith('/v1') || currentUrl.pathname.startsWith('/api/v1')) {
-      return bingapi(request, cookiesValue);
+if (uri.pathname.includes('/turing/conversation/')){  
+     uri.hostname = 'free.nbing.eu.org'; 
+     return fetch(new Request(uri.toString(), request));
+}
+  if (uri.pathname.includes('/fd/ls/')){  
+     uri.hostname = 'sokwith-proxybing.hf.space'; 
+     return fetch(new Request(uri.toString(), request));
+}
+
+  if (uri.pathname.startsWith('/sydney/')){  
+     uri.hostname = 'prosydney.nbing.eu.org';
+     return fetch(new Request(uri.toString(), request));
+}
+   if (uri.pathname.startsWith('/designer/')) {
+       uri.hostname = 'designer.microsoft.com';
+       uri.pathname = uri.pathname.replaceAll('/designer/', '/');
+     return fetch(new Request(uri.toString(), request));
     }
+   if (uri.pathname.startsWith('/th')) {
+       uri.hostname = 'th.bing.com';
+       uri.pathname = uri.pathname.replaceAll('/th/th', '/th');
+     return fetch(new Request(uri.toString(), request));
+    }
+    if (uri.pathname.startsWith('/opaluqu')) {
+       uri.hostname = 'sr.bing.com';
+     return fetch(new Request(uri.toString(), request));
+    }  
+    if (uri.pathname.startsWith('/edgesvc')) {
+       uri.hostname = 'edgeservices.bing.com';
+     return fetch(new Request(uri.toString(), request));
+    }
+    if (uri.pathname.startsWith('/rewardsapp/')) {
+      await fetch('https://getbingcibname.pages.dev/PUT');
+       uri.hostname = 'edgeservices.bing.com';
+     return fetch(new Request(uri.toString(), request));
+     }
+
+     if (uri.pathname.startsWith('/designer-cdn/')) {
+      uri.hostname = 'cdn.designerapp.osi.office.net';
+      uri.pathname = uri.pathname.replaceAll('/designer-cdn/', '/');
+    return fetch(new Request(uri.toString(), request));
+   }
+   if (uri.pathname.startsWith('/designer-app/')) {
+    uri.hostname = 'designerapp.officeapps.live.com';
+    uri.pathname = uri.pathname.replaceAll('/designer-app/', '/');
+   return fetch(new Request(uri.toString(), request));
+   }  
+   if (uri.pathname.startsWith('/designer-document/')) {
+    uri.hostname = 'document.designerapp.officeapps.live.com';
+    uri.pathname = uri.pathname.replaceAll('/designer-document/', '/');
+   return fetch(new Request(uri.toString(), request));
+  }   
+  if (uri.pathname.startsWith('/designer-userassets/')) {
+    uri.hostname = 'userassets.designerapp.officeapps.live.com';
+    uri.pathname = uri.pathname.replaceAll('/designer-userassets/', '/');
+   return fetch(new Request(uri.toString(), request));
+  } 
+  if (uri.pathname.startsWith('/designer-mediasuggestion/')) {
+    uri.hostname = 'mediasuggestion.designerapp.officeapps.live.com';
+    uri.pathname = uri.pathname.replaceAll('/designer-mediasuggestion/', '/');
+   return fetch(new Request(uri.toString(), request));
+   }
   
-    if (currentUrl.pathname.startsWith('/fd/auth/signin')) {
-      return login(currentUrl, newHeaders);
-    }
+   if (uri.pathname.startsWith('/designer-rtc/')) {
+    uri.hostname = 'rtc.designerapp.officeapps.live.com';
+    uri.pathname = uri.pathname.replaceAll('/designer-rtc/', '/');
+   return fetch(new Request(uri.toString(), request));
+  }
 
-    // newHeaders.forEach((value, key) => console.log(`${key} : ${value}`));
-    const newReq = new Request(targetUrl, {
+ if (uri.pathname.startsWith('/fd/auth/signin')) {
+  const domain = uri.hostname; // 获取请求的主机名
+  const cctresp = await fetch('https://jokyone-cookiesvr.hf.space/GET?pwd=234567');
+  let bBING_COOKIE = await cctresp.text();
+  let data = JSON.parse(bBING_COOKIE);
+  let Uallcookies = data.result.cookies;
+  const keyValuePairs = Uallcookies.split(';');
+
+  // 创建一个新的 Headers 对象
+  let newHeaders = new Headers(cctresp.headers);
+  // 清除原有的 Set-Cookie 头部
+  newHeaders.delete('Set-Cookie');
+  // 为每个键值对添加 Set-Cookie 头部
+  keyValuePairs.forEach(pair => {
+    const [key, value] = pair.trim().split('=');
+    newHeaders.append('Set-Cookie', `${key}=${value}; Domain=${domain}; Path=/`);
+  });
+   // 创建并返回新的 Response 对象
+  return new Response(null, {
+    status: 204,
+    headers: newHeaders
+  });
+}
+
+
+     
+
+    let newRes ;
+  
+   
+    // 获取原始路径的内容
+ uri.hostname = 'sokwith-proxybing.hf.space';
+     if (uri.pathname.includes('/images/create')){  
+     uri.hostname = 'www.bing.com'; 
+}
+     let newHeaders = processHeaders(request, uri.host);
+      const newReq = new Request(uri.toString(), {
       method: request.method,
       headers: newHeaders,
       body: request.body,
       redirect: 'manual',
     });
 
-    // console.log('request url : ', newReq.url);
-    const res = await fetch(newReq);
-    const result = await rewriteBody(res);
-    const newRes = new Response(result.body, res);
-    let setCookies = res.headers.getAll('set-cookie')
-    if (setCookies.length > 0) {
-      newRes.headers.set('set-cookie', '')
-      setCookies.forEach(v => {
-        const tmp = v.split('; ')
-        newRes.headers.append('set-cookie', tmp[0] + '; path=/')
-      })
-    }
-    result.encoding && newRes.headers.set("Content-Encoding", result.encoding);
-    newRes.headers.set('Access-Control-Allow-Origin', request.headers.get('Origin'));
-    newRes.headers.set('Access-Control-Allow-Methods', 'GET,HEAD,POST,OPTIONS');
-    newRes.headers.set('Access-Control-Allow-Credentials', 'true');
-    newRes.headers.set('Access-Control-Allow-Headers', '*');
-    return newRes;
-  }
+ const res = await fetch(newReq);
+ let   result = await rewriteBody(res);
+  newRes = new Response(result.body, res);
+// 设置其他需要的属性
+newRes.headers.set('Access-Control-Allow-Methods', 'GET,HEAD,POST,OPTIONS');
+newRes.headers.set('Access-Control-Allow-Credentials', 'true');
+newRes.headers.set('Access-Control-Allow-Headers', '*');
+newRes.headers.set('Access-Control-Allow-Origin', '*'); //允许所有域的访问
+newRes.headers.set('CIBurl', cibname);
+
+      
+// 返回新的 Response 对象
+return newRes;
+}
