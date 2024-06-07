@@ -28,7 +28,7 @@ const AUTH_KEY_COOKIE_NAME = 'BingAI_Auth_Key';
 const SYDNEY_ORIGIN = 'https://sydney.bing.com';
 const SYDNEY_PROXY = 'https://prosydney.nbing.eu.org';
 const BING_ORIGIN = 'https://www.bing.com';
-const BING_PROXY = 'https://sokwith-bing.hf.space';
+const BING_PROXY = 'https://sokwith-proxybing.hf.space';
 const BING_FREE = 'https://free.nbing.eu.org';
 const BING_SOURCE_ORIGIN = 'https://th.bing.com';
 const BING_SR_ORIGIN = 'https://sr.bing.com';
@@ -289,14 +289,14 @@ const login = async (url, headers) => {
   });
 };
 
-function processHeaders(request, targetUrl) {
+function processHeaders(request, targetHost) {
   const newHeaders = new Headers();
   request.headers.forEach((value, key) => {
     if (KEEP_REQ_HEADERS.includes(key)) {
       newHeaders.set(key, value);
     }
   });
-  newHeaders.set('host', targetUrl.host);
+  newHeaders.set('host', targetHost);
   newHeaders.set('origin', BING_ORIGIN);
   if (request.headers.has('referer') && request.headers.get('referer').indexOf('web/compose.html') != -1) {
     newHeaders.set('referer', 'https://edgeservices.bing.com/edgesvc/compose');
@@ -485,9 +485,9 @@ async function handleRequest(request, env) {
       WEB_CONFIG.WORKER_URL = currentUrl.origin;
     }
     // if (currentUrl.pathname === '/' || currentUrl.pathname.startsWith('/github/')) {
-    if (currentUrl.pathname === '/') {
-      return home(currentUrl.pathname);
-    }
+  //  if (currentUrl.pathname === '/') {
+  //    return home(currentUrl.pathname);
+  //  }
     if (currentUrl.pathname.startsWith('/sysconf')) {
       let isAuth = true;
       if (CUSTOM_OPTIONS.Go_Proxy_BingAI_AUTH_KEY.length !== 0) {
@@ -515,6 +515,8 @@ async function handleRequest(request, env) {
     
     } else if (currentUrl.pathname.startsWith('/turing')) {
       targetUrl = new URL(BING_FREE + currentUrl.pathname + currentUrl.search);
+    } else if (currentUrl.pathname.startsWith('/images/create')) {
+      targetUrl = new URL(BING_ORIGIN + currentUrl.pathname + currentUrl.search);
     
     } else if (currentUrl.pathname.startsWith('/th')) {
       targetUrl = new URL(BING_SOURCE_ORIGIN + currentUrl.pathname.replaceAll('/th/th', '/th') + currentUrl.search);
@@ -541,10 +543,10 @@ async function handleRequest(request, env) {
     } else if (currentUrl.pathname.startsWith('/api/ms/login')) {
       targetUrl = new URL(CUSTOM_OPTIONS.BYPASS_SERVER + currentUrl.pathname + currentUrl.search);
     } else {
-      targetUrl = new URL(BING_ORIGIN + currentUrl.pathname + currentUrl.search);
+      targetUrl = new URL(BING_PROXY + currentUrl.pathname + currentUrl.search);
     }
 
-    let newHeaders = processHeaders(request, targetUrl);
+    let newHeaders = processHeaders(request, targetUrl.host);
     let cookiesValue = newHeaders.get('Cookie');
  
     if (currentUrl.pathname.startsWith('/v1') || currentUrl.pathname.startsWith('/api/v1')) {
