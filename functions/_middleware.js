@@ -241,78 +241,6 @@ async function fetchAndExtractVariableString(url = 'https://nagse-bingcib.hf.spa
 }
 
 
-function processHeaders(request, targetUrl) {
-  const newHeaders = new Headers();
-  request.headers.forEach((value, key) => {
-    if (KEEP_REQ_HEADERS.includes(key)) {
-      newHeaders.set(key, value);
-    }
-  });
-  newHeaders.set('host', targetUrl.host);
-  newHeaders.set('origin', BING_ORIGIN);
-  if (request.headers.has('referer') && request.headers.get('referer').indexOf('web/compose.html') != -1) {
-    newHeaders.set('referer', 'https://edgeservices.bing.com/edgesvc/compose');
-  } else {
-    newHeaders.set('referer', 'https://www.bing.com/chat?q=Bing+AI&showconv=1&FORM=hpcodx');
-  }
-  const randIP = getRandomIP();
-  newHeaders.set('X-Forwarded-For', randIP);
-  const cookie = request.headers.get('Cookie') || '';
-  let cookies = cookie;
-
-  if (!cookie.includes('KievRPSSecAuth=')) {
-    if (CUSTOM_OPTIONS.KievRPSSecAuth.length !== 0) {
-      cookies += '; KievRPSSecAuth=' + CUSTOM_OPTIONS.KievRPSSecAuth;
-    } else {
-      cookies += '; KievRPSSecAuth=' + randomString(512);
-    }
-  }
-  if (!cookie.includes('_RwBf=')) {
-    if (CUSTOM_OPTIONS._RwBf.length !== 0) {
-      cookies += '; _RwBf=' + CUSTOM_OPTIONS._RwBf
-    }
-  }
-  if (!cookie.includes('MUID=')) {
-    if (CUSTOM_OPTIONS.MUID.length !== 0) {
-      cookies += '; MUID=' + CUSTOM_OPTIONS.MUID
-    }
-  }
-  if (!cookie.includes('_U=')) {
-    if (CUSTOM_OPTIONS._U.length !== 0) {
-      const _Us = CUSTOM_OPTIONS._U.split(',');
-      cookies += '; _U=' + _Us[getRandomInt(0, _Us.length)];
-    }
-  }  
-  const cookieStr = cookies;
-  let cookieObjects = {};
-  cookieStr.split(';').forEach(item => {
-    if (!item) {
-      return;
-    }
-    const arr = item.split('=');
-    const key = arr[0].trim();
-    const val = arr.slice(1, arr.length+1).join('=').trim();
-    cookieObjects[key] = val;
-  })
-  delete cookieObjects[RAND_IP_COOKIE_NAME];
-
-  cookies = Object.keys(cookieObjects).map(key => key + '=' + cookieObjects[key]).join('; ');
-
-  newHeaders.set('Cookie', cookies);
-  const oldUA = request.headers.get('user-agent') || '';
-  let isMobile = oldUA.includes('Mobile') || oldUA.includes('Android');
-  if (isMobile) {
-    newHeaders.set(
-      'user-agent',
-      'Mozilla/5.0 (iPhone; CPU iPhone OS 15_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.7 Mobile/15E148 Safari/605.1.15 BingSapphire/1.0.410427012'
-    );
-  } else {
-    newHeaders.set('user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36 Edg/113.0.1774.35');
-  }
-
-  return newHeaders;
-}
-
 
 export async function onRequest(context) {
   const { request, env } = context;
@@ -389,6 +317,25 @@ if (uri.pathname.includes('/turing/conversation/')){
   if (uri.pathname.includes('/fd/ls/')){  
      uri.hostname = 'sokwith-proxybing.hf.space'; 
      return fetch(new Request(uri.toString(), request));
+}
+if (uri.pathname.includes('/images/create')){  
+     uri.hostname = 'www.bing.com'; 
+
+     // 创建新的 headers
+     let newHeaders = new Headers(request.headers);
+     newHeaders.set('host', 'https://www.bing.com');
+     newHeaders.set('origin', 'https://www.bing.com');
+
+     // 使用新的 headers 创建新的请求
+     let newRequest = new Request(uri.toString(), {
+         method: request.method,
+         headers: newHeaders,
+         mode: request.mode,
+         credentials: request.credentials,
+         redirect: request.redirect
+     });
+
+     return fetch(newRequest);
 }
 
   if (uri.pathname.startsWith('/sydney/')){  
@@ -476,25 +423,12 @@ if (uri.pathname.includes('/turing/conversation/')){
 }
 
 
-     
-
     let newRes ;
   
    
     // 获取原始路径的内容
  uri.hostname = 'sokwith-proxybing.hf.space';
-     if (uri.pathname.includes('/images/create')){  
-     uri.hostname = 'www.bing.com'; 
-}
-     let newHeaders = processHeaders(request, uri.host);
-      const newReq = new Request(uri.toString(), {
-      method: request.method,
-      headers: newHeaders,
-      body: request.body,
-      redirect: 'manual',
-    });
-
- const res = await fetch(newReq);
+ const res = await fetch(new Request(uri.toString(), request));
  let   result = await rewriteBody(res);
   newRes = new Response(result.body, res);
 // 设置其他需要的属性
