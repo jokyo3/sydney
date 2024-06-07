@@ -296,79 +296,6 @@ const login = async (url, headers) => {
   });
 };
 
-function processHeaders(request, targetUrl) {
-  const newHeaders = new Headers();
-  request.headers.forEach((value, key) => {
-    if (KEEP_REQ_HEADERS.includes(key)) {
-      newHeaders.set(key, value);
-    }
-  });
-  newHeaders.set('host', targetUrl.host);
-  newHeaders.set('origin', BING_ORIGIN);
-  if (request.headers.has('referer') && request.headers.get('referer').indexOf('web/compose.html') != -1) {
-    newHeaders.set('referer', 'https://edgeservices.bing.com/edgesvc/compose');
-  } else {
-    newHeaders.set('referer', 'https://www.bing.com/chat?q=Bing+AI&showconv=1&FORM=hpcodx');
-  }
-  const randIP = getRandomIP();
-  newHeaders.set('X-Forwarded-For', randIP);
-  const cookie = request.headers.get('Cookie') || '';
-  let cookies = cookie;
-
-  if (!cookie.includes('KievRPSSecAuth=')) {
-    if (CUSTOM_OPTIONS.KievRPSSecAuth.length !== 0) {
-      cookies += '; KievRPSSecAuth=' + CUSTOM_OPTIONS.KievRPSSecAuth;
-    } else {
-      cookies += '; KievRPSSecAuth=' + randomString(512);
-    }
-  }
-  if (!cookie.includes('_RwBf=')) {
-    if (CUSTOM_OPTIONS._RwBf.length !== 0) {
-      cookies += '; _RwBf=' + CUSTOM_OPTIONS._RwBf
-    }
-  }
-  if (!cookie.includes('MUID=')) {
-    if (CUSTOM_OPTIONS.MUID.length !== 0) {
-      cookies += '; MUID=' + CUSTOM_OPTIONS.MUID
-    }
-  }
-  if (!cookie.includes('_U=')) {
-    if (CUSTOM_OPTIONS._U.length !== 0) {
-      const _Us = CUSTOM_OPTIONS._U.split(',');
-      cookies += '; _U=' + _Us[getRandomInt(0, _Us.length)];
-    }
-  }  
-  const cookieStr = cookies;
-  let cookieObjects = {};
-  cookieStr.split(';').forEach(item => {
-    if (!item) {
-      return;
-    }
-    const arr = item.split('=');
-    const key = arr[0].trim();
-    const val = arr.slice(1, arr.length+1).join('=').trim();
-    cookieObjects[key] = val;
-  })
-  delete cookieObjects[RAND_IP_COOKIE_NAME];
-
-  cookies = Object.keys(cookieObjects).map(key => key + '=' + cookieObjects[key]).join('; ');
-
-  newHeaders.set('Cookie', cookies);
-  const oldUA = request.headers.get('user-agent') || '';
-  let isMobile = oldUA.includes('Mobile') || oldUA.includes('Android');
-  if (isMobile) {
-    newHeaders.set(
-      'user-agent',
-      'Mozilla/5.0 (iPhone; CPU iPhone OS 15_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.7 Mobile/15E148 Safari/605.1.15 BingSapphire/1.0.410427012'
-    );
-  } else {
-    newHeaders.set('user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36 Edg/113.0.1774.35');
-  }
-
-  return newHeaders;
-}
-
-      
 /**
  * bingapi
  * @param {Request} request
@@ -551,13 +478,82 @@ async function handleRequest(request, env) {
       targetUrl = new URL(BING_ORIGIN + currentUrl.pathname + currentUrl.search);
     }
 
-    let newHeaders = processHeaders(request, targetUrl);
-    let cookiesValue = processedHeaders.get('Cookie');
+    const newHeaders = new Headers();
+    request.headers.forEach((value, key) => {
+      // console.log(`old : ${key} : ${value}`);
+      if (KEEP_REQ_HEADERS.includes(key)) {
+        newHeaders.set(key, value);
+      }
+    });
+    newHeaders.set('host', targetUrl.host);
+    newHeaders.set('origin', BING_ORIGIN);
+    if (request.headers.has('referer') && request.headers.get('referer').indexOf('web/compose.html') != -1) {
+      newHeaders.set('referer', 'https://edgeservices.bing.com/edgesvc/compose');
+    } else {
+      newHeaders.set('referer', 'https://www.bing.com/chat?q=Bing+AI&showconv=1&FORM=hpcodx');
+    }
+    const randIP = getRandomIP();
+    // console.log('randIP : ', randIP);
+    newHeaders.set('X-Forwarded-For', randIP);
+    const cookie = request.headers.get('Cookie') || '';
+    let cookies = cookie;
+
+    if (!cookie.includes('KievRPSSecAuth=')) {
+      if (CUSTOM_OPTIONS.KievRPSSecAuth.length !== 0) {
+        cookies += '; KievRPSSecAuth=' + CUSTOM_OPTIONS.KievRPSSecAuth;
+      } else {
+        cookies += '; KievRPSSecAuth=' + randomString(512);
+      }
+    }
+    if (!cookie.includes('_RwBf=')) {
+      if (CUSTOM_OPTIONS._RwBf.length !== 0) {
+        cookies += '; _RwBf=' + CUSTOM_OPTIONS._RwBf
+      }
+    }
+    if (!cookie.includes('MUID=')) {
+      if (CUSTOM_OPTIONS.MUID.length !== 0) {
+        cookies += '; MUID=' + CUSTOM_OPTIONS.MUID
+      }
+    }
+    if (!cookie.includes('_U=')) {
+      if (CUSTOM_OPTIONS._U.length !== 0) {
+        const _Us = CUSTOM_OPTIONS._U.split(',');
+        cookies += '; _U=' + _Us[getRandomInt(0, _Us.length)];
+      }
+    }
+
  
     if (currentUrl.pathname.startsWith('/v1') || currentUrl.pathname.startsWith('/api/v1')) {
-      return bingapi(request, cookiesValue);
+      return bingapi(request, cookies);
     }
   
+    const cookieStr = cookies;
+    let cookieObjects = {};
+    cookieStr.split(';').forEach(item => {
+      if (!item) {
+        return;
+      }
+      const arr = item.split('=');
+      const key = arr[0].trim();
+      const val = arr.slice(1, arr.length+1).join('=').trim();
+      cookieObjects[key] = val;
+    })
+    delete cookieObjects[RAND_IP_COOKIE_NAME];
+
+    cookies = Object.keys(cookieObjects).map(key => key + '=' + cookieObjects[key]).join('; ');
+
+    newHeaders.set('Cookie', cookies);
+    const oldUA = request.headers.get('user-agent') || '';
+    let isMobile = oldUA.includes('Mobile') || oldUA.includes('Android');
+    if (isMobile) {
+      newHeaders.set(
+        'user-agent',
+        'Mozilla/5.0 (iPhone; CPU iPhone OS 15_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.7 Mobile/15E148 Safari/605.1.15 BingSapphire/1.0.410427012'
+      );
+    } else {
+      newHeaders.set('user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36 Edg/113.0.1774.35');
+    }
+
     if (currentUrl.pathname.startsWith('/fd/auth/signin')) {
       return login(currentUrl, newHeaders);
     }
