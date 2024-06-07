@@ -552,7 +552,7 @@ async function handleRequest(request, env) {
     }
 
     let newHeaders = processHeaders(request, targetUrl);
-    let cookiesValue = processedHeaders.get('cookies');
+    let cookiesValue = processedHeaders.get('Cookie');
  
     if (currentUrl.pathname.startsWith('/v1') || currentUrl.pathname.startsWith('/api/v1')) {
       return bingapi(request, cookiesValue);
