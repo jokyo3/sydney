@@ -123,14 +123,7 @@ const rewriteBody = async (res) => {
  * @returns
  */
 const home = async (pathname) => {
-  let baseUrl;
-  if (CUSTOM_OPTIONS.NIGHTLY) {
-    baseUrl = 'https://raw.githubusercontent.com/Harry-zklcdc/go-proxy-bingai/nightly/';
-  } else {
-    baseUrl = 'https://sokwith-proxybing.hf.space/';
-  }
-  let url = baseUrl;
-  
+  let url = 'https://sokwith-proxybing.hf.space/';
   const res = await fetch(url);
   const result = await rewriteBody(res);
   const newRes = new Response(result.body, res);
