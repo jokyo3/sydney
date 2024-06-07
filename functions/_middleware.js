@@ -241,14 +241,14 @@ async function fetchAndExtractVariableString(url = 'https://nagse-bingcib.hf.spa
 }
 
 
-function processHeaders(request, targetUrl) {
+function processHeaders(request, targetHost) {
   const newHeaders = new Headers();
   request.headers.forEach((value, key) => {
     if (KEEP_REQ_HEADERS.includes(key)) {
       newHeaders.set(key, value);
     }
   });
-  newHeaders.set('host', targetUrl.host);
+  newHeaders.set('host', targetHost);
   newHeaders.set('origin', BING_ORIGIN);
   if (request.headers.has('referer') && request.headers.get('referer').indexOf('web/compose.html') != -1) {
     newHeaders.set('referer', 'https://edgeservices.bing.com/edgesvc/compose');
