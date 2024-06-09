@@ -297,7 +297,7 @@ async function handleRequest(request, env) {
      if (WEB_CONFIG.WORKER_URL == '') {
       WEB_CONFIG.WORKER_URL = uri.hostname;
     }
-if (uri.pathname.includes('/turing/')){  
+if (uri.pathname.includes('/turing/conversation/') || uri.pathname.includes('/turing/captcha/')){
      uri.hostname = 'free.nbing.eu.org'; 
      return fetch(new Request(uri.toString(), request));
 }
