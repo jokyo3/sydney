@@ -422,8 +422,9 @@ return imgnewRes;
     }
   if (uri.pathname.startsWith('/chat')) {
     uri = new URL('/search?q=Microsoft+Copilot&FORM=hpcodx&showconv=1&showconv=1', uri.origin);
-    return fetch(new Request(uri.toString(), request));
-    }
+    return Response.redirect(uri.toString(), 302);
+  }
+
 
     if (uri.pathname.startsWith('/opaluqu')) {
        uri.hostname = 'sr.bing.com';
