@@ -421,8 +421,8 @@ return imgnewRes;
      return fetch(new Request(uri.toString(), request));
     }
   if (uri.pathname.startsWith('/chat')) {
-       uri.hostname = 'www.bing.com';
-       uri.pathname = '/search?q=Microsoft+Copilot&FORM=hpcodx&showconv=1&showconv=1';
+     //  uri.hostname = 'www.bing.com';
+       uri = 'https:///search?q=Microsoft+Copilot&FORM=hpcodx&showconv=1&showconv=1';
      return fetch(new Request(uri.toString(), request));
     }
     if (uri.pathname.startsWith('/opaluqu')) {
