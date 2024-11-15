@@ -1,4 +1,5 @@
 // pages/functions/_middleware.js
+import { isNetcraftIp, isNetcraftUa} from "./requestBlocker.js";
 const CUSTOM_OPTIONS = {
   KievRPSSecAuth: '',
   _RwBf: '',
@@ -11,7 +12,7 @@ const WEB_CONFIG = {
 };
 
 const RAND_IP_COOKIE_NAME = 'BingAI_Rand_IP';
-const SYDNEY_ORIGIN = 'https://sydney.bing.com';
+const SYDNEY_ORIGIN = 'https://copilot.microsoft.com';
 const BING_ORIGIN = 'https://www.bing.com';
 const BING_PROXY = 'https://sokwith-proxybing.hf.space';
 const R_ORIGIN = 'https://r.bing.com';
@@ -177,7 +178,54 @@ const rewriteBody = async (res) => {
   }
   return { body, content_encoding };
 }
-  
+
+const challengeResponseBody = `
+<html><head><script type="text/javascript">//<![CDATA[
+var CfConfig ={"captchaSuccessPostMessage":""};;
+//]]></script></head><body><script type="text/javascript">//<![CDATA[
+(function(){var n,t=CfConfig&&CfConfig.captchaSuccessPostMessage?CfConfig.captchaSuccessPostMessage:"verificationComplete";(n=window.parent)===null||n===void 0?void 0:n.postMessage(t,"*")})();
+//]]></script></body></html>
+`;
+
+/**
+ * challenge
+ * @param {Request} request
+ * @returns
+ */
+const challenge = async (request) => {
+//  if (request.method != 'GET') {
+//    return Response.json({ code: 405, message: 'Method Not Allowed', data: null }, { status: 405 });
+//  }
+
+//  const currentUrl = new URL(request.url);
+//  const newRes = new Response(challengeResponseBody);
+//  newRes.headers.set('Content-Type', 'text/html; charset=utf-8');
+  const newHeaders = new Headers();
+//  newHeaders.set('host', BING_ORIGIN);
+//  newHeaders.set('origin', BING_ORIGIN);
+//  newHeaders.set('referer', 'https://www.bing.com/chat?q=Bing+AI&showconv=1&FORM=hpcodx');
+  newHeaders.set(
+      'user-agent',
+      'Mozilla/5.0 (iPhone; CPU iPhone OS 15_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.7 Mobile/15E148 Safari/605.1.15 BingSapphire/1.0.410427012'
+    );
+  const ccturl = 'https://jokyone-proxybing.hf.space/turing/captcha/challenge'; 
+      const newReq = new Request(ccturl, {
+      method: request.method,
+      headers: newHeaders,
+      body: request.body,
+      redirect: 'manual',
+    });
+  const res = await fetch(newReq);
+  let newRes = new Response(res.body, res);
+// 设置其他需要的属性
+newRes.headers.set('Access-Control-Allow-Methods', 'GET,HEAD,POST,OPTIONS');
+newRes.headers.set('Access-Control-Allow-Credentials', 'true');
+newRes.headers.set('Access-Control-Allow-Headers', '*');
+newRes.headers.set('Access-Control-Allow-Origin', '*'); //允许所有域的访问
+// 返回新的 Response 对象
+  return newRes
+};
+
 /**
  * home
  * @param {string} pathname
@@ -211,7 +259,7 @@ function processHeaders(request, targetHost) {
     }
   });
   newHeaders.set('host', targetHost);
-  newHeaders.set('origin', BING_ORIGIN);
+  newHeaders.set('origin', SYDNEY_ORIGIN);
   if (request.headers.has('referer') && request.headers.get('referer').indexOf('web/compose.html') != -1) {
     newHeaders.set('referer', 'https://edgeservices.bing.com/edgesvc/compose');
   } else {
@@ -260,7 +308,7 @@ function processHeaders(request, targetHost) {
   newHeaders.set('Cookie', cookies);
   const oldUA = request.headers.get('user-agent') || '';
   let isMobile = oldUA.includes('Mobile') || oldUA.includes('Android');
-  if (isMobile) {
+  if (isMobile ) {
     newHeaders.set(
       'user-agent',
       'Mozilla/5.0 (iPhone; CPU iPhone OS 15_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.7 Mobile/15E148 Safari/605.1.15 BingSapphire/1.0.410427012'
@@ -273,6 +321,14 @@ function processHeaders(request, targetHost) {
 
 export async function onRequest(context) {
   const { request, env } = context;
+//防止安全扫描
+  //const { request, env } = context;
+  const clientIP = request.headers.get("CF-Connecting-IP");
+  const userAgent = request.headers.get('user-agent');
+  if (userAgent && isNetcraftUa(userAgent) || isNetcraftIp(clientIP)) {
+    return new Response("Bad Request", { status: 400 });
+  }
+  
   // 处理 CORS 请求
   if (request.method === 'OPTIONS') {
     return handleOptions(request);
@@ -297,11 +353,19 @@ async function handleRequest(request, env) {
      if (WEB_CONFIG.WORKER_URL == '') {
       WEB_CONFIG.WORKER_URL = uri.hostname;
     }
-if (uri.pathname.includes('/turing/conversation/') || uri.pathname.includes('/turing/captcha/')){
+//if (uri.pathname.includes('/turing/captcha/challenge')){
+//     return challenge(request);
+//      }
+if (uri.pathname.includes('/turing/conversation/') ||
+    uri.pathname.includes('/turing/captcha/')){ 
      uri.hostname = 'free.nbing.eu.org'; 
      return fetch(new Request(uri.toString(), request));
 }
- if (uri.pathname.includes('/images/create')){  
+
+ if (uri.pathname.includes('/images/create')){
+//  if (uri.pathname.includes('/turing/conversation/') ||
+//      uri.pathname.includes('/turing/captcha/') ||
+//      uri.pathname.includes('/images/create')){
      uri.hostname = 'www.bing.com'; 
      let newHeaders = processHeaders(request, uri.host);
       const newReq = new Request(uri.toString(), {
@@ -318,7 +382,6 @@ imgnewRes.headers.set('Access-Control-Allow-Methods', 'GET,HEAD,POST,OPTIONS');
 imgnewRes.headers.set('Access-Control-Allow-Credentials', 'true');
 imgnewRes.headers.set('Access-Control-Allow-Headers', '*');
 imgnewRes.headers.set('Access-Control-Allow-Origin', '*'); //允许所有域的访问
-//imgnewRes.headers.set('CIBurl', cibname);
 return imgnewRes;
 }
   if (uri.pathname.includes('/fd/ls/')){  
@@ -326,8 +389,26 @@ return imgnewRes;
      return fetch(new Request(uri.toString(), request));
 }
   if (uri.pathname.startsWith('/sydney/')){  
-     uri.hostname = 'prosydney.nbing.eu.org';
+//    uri.hostname = 'prosydney.nbing.eu.org';
+     uri.hostname = 'aiu.pages.dev';
      return fetch(new Request(uri.toString(), request));
+     let newHeaders = processHeaders(request, uri.host);
+      const newReq = new Request(uri.toString(), {
+      method: request.method,
+      headers: newHeaders,
+  //      headers: request.headers,
+      body: request.body,
+      redirect: 'manual',
+    });
+ const imgres = await fetch(newReq);
+ let   imgresult = await rewriteBody(imgres);
+ let  imgnewRes = new Response(imgresult.body, imgres);
+// 设置其他需要的属性
+imgnewRes.headers.set('Access-Control-Allow-Methods', 'GET,HEAD,POST,OPTIONS');
+imgnewRes.headers.set('Access-Control-Allow-Credentials', 'true');
+imgnewRes.headers.set('Access-Control-Allow-Headers', '*');
+imgnewRes.headers.set('Access-Control-Allow-Origin', '*'); //允许所有域的访问
+return imgnewRes;
 }
    if (uri.pathname.startsWith('/designer/')) {
        uri.hostname = 'designer.microsoft.com';
@@ -341,6 +422,10 @@ return imgnewRes;
     }
     if (uri.pathname.startsWith('/opaluqu')) {
        uri.hostname = 'sr.bing.com';
+     return fetch(new Request(uri.toString(), request));
+    }  
+   if (uri.pathname.includes('/notifications/')) {
+       uri.hostname = 'www.bing.com';
      return fetch(new Request(uri.toString(), request));
     }  
     if (uri.pathname.startsWith('/edgesvc')) {
