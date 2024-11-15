@@ -392,8 +392,8 @@ return imgnewRes;
      return fetch(new Request(uri.toString(), request));
 }
   if (uri.pathname.startsWith('/sydney/')){  
-    uri.hostname = 'copilot.microsoft.com';
- //    uri.hostname = 'aiu.pages.dev';
+  //  uri.hostname = 'copilot.microsoft.com';
+     uri.hostname = 'aiu.pages.dev';
      return fetch(new Request(uri.toString(), request));
      let newHeaders = processHeaders(request, uri.host);
       const newReq = new Request(uri.toString(), {
