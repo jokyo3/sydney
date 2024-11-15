@@ -12,7 +12,7 @@ const WEB_CONFIG = {
 };
 
 const RAND_IP_COOKIE_NAME = 'BingAI_Rand_IP';
-const SYDNEY_ORIGIN = 'https://copilot.microsoft.com';
+const SYDNEY_ORIGIN = 'https://sydney.bing.com';
 const BING_ORIGIN = 'https://www.bing.com';
 const BING_PROXY = 'https://sokwith-proxybing.hf.space';
 const R_ORIGIN = 'https://r.bing.com';
