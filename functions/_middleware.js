@@ -420,6 +420,11 @@ return imgnewRes;
        uri.pathname = uri.pathname.replaceAll('/th/th', '/th');
      return fetch(new Request(uri.toString(), request));
     }
+  if (uri.pathname.startsWith('/chat')) {
+       uri.hostname = 'www.bing.com';
+       uri.pathname = '/search?q=Microsoft+Copilot&FORM=hpcodx&showconv=1&showconv=1';
+     return fetch(new Request(uri.toString(), request));
+    }
     if (uri.pathname.startsWith('/opaluqu')) {
        uri.hostname = 'sr.bing.com';
      return fetch(new Request(uri.toString(), request));
