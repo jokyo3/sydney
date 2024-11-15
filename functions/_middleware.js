@@ -13,6 +13,7 @@ const WEB_CONFIG = {
 
 const RAND_IP_COOKIE_NAME = 'BingAI_Rand_IP';
 const SYDNEY_ORIGIN = 'https://sydney.bing.com';
+const SYDNEY_WSS = 'wss://sydney.bing.com';
 const BING_ORIGIN = 'https://www.bing.com';
 const BING_PROXY = 'https://sokwith-proxybing.hf.space';
 const R_ORIGIN = 'https://r.bing.com';
@@ -159,6 +160,8 @@ const replaceURL = (body) => {
   body = body.replaceAll(DESIGNER_RTC_ORIGIN.replace("http://", "").replace("https://", ""), WEB_CONFIG.WORKER_URL.replace("http://", "").replace("https://", "") + '/designer-rtc');
   body = body.replaceAll(DESIGNER_APP_ORIGIN.replace("http://", "").replace("https://", ""), WEB_CONFIG.WORKER_URL.replace("http://", "").replace("https://", "") + '/designer-app');
   body = body.replaceAll(DESIGNER_ORIGIN.replace("http://", "").replace("https://", ""), WEB_CONFIG.WORKER_URL.replace("http://", "").replace("https://", "") + '/designer');
+  body = body.replaceAll(SYDNEY_WSS.replace("wss://", ""), WEB_CONFIG.WORKER_URL.replace("http://", "").replace("https://", "").replace("wss://", ""));
+
   return body
 }
 
