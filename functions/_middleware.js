@@ -392,8 +392,8 @@ return imgnewRes;
      return fetch(new Request(uri.toString(), request));
 }
   if (uri.pathname.startsWith('/sydney/')){  
-//    uri.hostname = 'prosydney.nbing.eu.org';
-     uri.hostname = 'aiu.pages.dev';
+    uri.hostname = 'sydney.bing.com';
+ //    uri.hostname = 'aiu.pages.dev';
      return fetch(new Request(uri.toString(), request));
      let newHeaders = processHeaders(request, uri.host);
       const newReq = new Request(uri.toString(), {
