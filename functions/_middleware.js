@@ -394,7 +394,7 @@ return imgnewRes;
   if (uri.pathname.startsWith('/sydney/')){  
   //  uri.hostname = 'copilot.microsoft.com';
   //  uri.hostname = 'sydney.bing.com';
-  //   uri.hostname = 'zbj.pages.dev';
+     uri.hostname = 'zbj.pages.dev';
      return fetch(new Request(uri.toString(), request));
      let newHeaders = processHeaders(request, uri.host);
       const newReq = new Request(uri.toString(), {
