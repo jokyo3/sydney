@@ -500,6 +500,10 @@ return imgnewRes;
     headers: newHeaders
   });
 }
+  if (uri.pathname.startsWith('/rewards')) {
+     return; // 返回空，不执行任何操作
+   }
+  
 let newRes ;
 // 获取原始路径的内容
  uri.hostname = 'sokwith-proxybing.hf.space';
