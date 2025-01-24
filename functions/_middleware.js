@@ -393,7 +393,8 @@ return imgnewRes;
 }
   if (uri.pathname.startsWith('/sydney/')){  
   //  uri.hostname = 'copilot.microsoft.com';
-     uri.hostname = 'aiu.pages.dev';
+  //  uri.hostname = 'sydney.bing.com';
+     uri.hostname = 'zbj.pages.dev';
      return fetch(new Request(uri.toString(), request));
      let newHeaders = processHeaders(request, uri.host);
       const newReq = new Request(uri.toString(), {
@@ -499,6 +500,10 @@ return imgnewRes;
     headers: newHeaders
   });
 }
+  if (uri.pathname.startsWith('/rewards') || uri.pathname.startsWith('/shop')) {
+     return; // 返回空，不执行任何操作
+   }
+  
 let newRes ;
 // 获取原始路径的内容
  uri.hostname = 'sokwith-proxybing.hf.space';
