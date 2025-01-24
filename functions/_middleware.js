@@ -500,7 +500,7 @@ return imgnewRes;
     headers: newHeaders
   });
 }
-  if (uri.pathname.startsWith('/rewards')) {
+  if (uri.pathname.startsWith('/rewards') || uri.pathname.startsWith('/shop')) {
      return; // 返回空，不执行任何操作
    }
   
